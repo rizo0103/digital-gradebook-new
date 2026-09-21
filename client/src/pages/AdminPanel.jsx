@@ -28,7 +28,11 @@ const AdminPanel = () => {
     };
 
     useEffect(() => {
-        fetchInitialData();
+        const loadInitialData = async () => {
+            await fetchInitialData();
+        };
+
+        loadInitialData();
     }, []);
 
     return (
