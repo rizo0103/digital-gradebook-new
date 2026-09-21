@@ -12,22 +12,23 @@ import GroupsList from '../components/admin/GroupsList';
 const AdminPanel = () => {
     const [activeTab, setActiveTab] = useState('students');
     const [groups, setGroups] = useState([]);
+    const [teachers, setTeachers] = useState([]);
 
-    const fetchGroups = async () => {
+    const fetchInitialData = async () => {
         try {
-            const res = await api.get('/groups');
-            setGroups(res.data);
+            const [groupsRes, teachersRes] = await Promise.all([
+                api.get('/groups'),
+                api.get('/admin/users?role=teacher')
+            ]);
+            setGroups(groupsRes.data);
+            setTeachers(teachersRes.data);
         } catch (err) {
-            console.error('Ошибка загрузки групп:', err);
+            console.error('Ошибка загрузки данных:', err);
         }
     };
 
     useEffect(() => {
-        const loadGroups = async () => {
-            await fetchGroups();
-        };
-
-        loadGroups();
+        fetchInitialData();
     }, []);
 
     return (
@@ -84,16 +85,15 @@ const AdminPanel = () => {
                 {/* Вкладка Группы: форма добавления + список управления */}
                 {activeTab === 'groups' && (
                     <div className="space-y-8">
-                        <GroupsTab onGroupCreated={fetchGroups} />
-                        <GroupsList groups={groups} onRefresh={fetchGroups} />
+                        <GroupsTab teachers={teachers} onGroupCreated={fetchInitialData} />
+                        <GroupsList groups={groups} onRefresh={fetchInitialData} />
                     </div>
                 )}
 
                 {/* Вкладка Расписание */}
                 {activeTab === 'schedule' && (
-                    <ScheduleTab groups={groups} />
+                    <ScheduleTab groups={groups} teachers={teachers} />
                 )}
-
             </div>
         </div>
     );

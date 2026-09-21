@@ -57,16 +57,19 @@ exports.login = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Ошибка сервера при входе', error: error.message });
+    res.status(500).json({ message: 'Ошибка сервера при входе' });
   }
 };
 // Создание пользователя (только Admin)
 exports.registerUser = async (req, res) => {
   try {
-    const { email, password, fullName, role } = req.body;
+    const { email, password, fullName, role, username } = req.body;
 
-    if (!['admin', 'teacher', 'student'].includes(role)) {
+    if (!email || !password || !fullName || !['admin', 'teacher', 'student'].includes(role)) {
       return res.status(400).json({ message: 'Некорректная роль пользователя' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Пароль должен содержать минимум 8 символов' });
     }
 
     const existingUser = await db.collection('users').where('email', '==', email).get();
@@ -78,6 +81,7 @@ exports.registerUser = async (req, res) => {
 
     const newUserRef = await db.collection('users').add({
       email,
+      username: username || email.split('@')[0],
       fullName,
       role,
       passwordHash,
@@ -86,6 +90,6 @@ exports.registerUser = async (req, res) => {
 
     res.status(201).json({ id: newUserRef.id, message: 'Пользователь успешно создан' });
   } catch (error) {
-    res.status(500).json({ message: 'Ошибка при регистрации', error: error.message });
+    res.status(500).json({ message: 'Ошибка при регистрации' });
   }
 };

@@ -16,7 +16,7 @@ const daysOptions = [
     { id: 0, label: 'Вс', value: 'Sunday' }
 ];
 
-const ScheduleTab = ({ groups }) => {
+const ScheduleTab = ({ groups, teachers }) => {
     const [scheduleForm, setScheduleForm] = useState({
         groupId: '',
         subject: '',
@@ -125,6 +125,15 @@ const ScheduleTab = ({ groups }) => {
                             value={scheduleForm.subject}
                             onChange={(e) => setScheduleForm({ ...scheduleForm, subject: e.target.value })}
                             className={fieldInputClass}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Преподаватель</label>
+                        <CustomDropdown
+                            options={teachers.map((teacher) => ({ value: teacher.id, label: teacher.fullName }))}
+                            value={scheduleForm.teacherId}
+                            onChange={(val) => setScheduleForm({ ...scheduleForm, teacherId: val })}
+                            placeholder="-- Выберите преподавателя --"
                         />
                     </div>
                     <div>

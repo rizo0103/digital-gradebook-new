@@ -23,25 +23,35 @@ const generateUsername = (fullName) => {
 // 1. Пакетная загрузка студентов из JSON
 exports.importStudents = async (req, res) => {
     try {
-        const { students, defaultPassword = 'studentPassword123' } = req.body; // Массив объектов [{ fullName, email }, ...]
+        const { students, defaultPassword = process.env.STUDENT_DEFAULT_PASSWORD } = req.body;
 
         if (!Array.isArray(students) || students.length === 0) {
             return res.status(400).json({ message: 'Передан пустой или некорректный массив студентов' });
+        }
+        if (!defaultPassword || defaultPassword.length < 8) {
+            return res.status(400).json({ message: 'Укажите пароль длиной не менее 8 символов' });
         }
 
         const defaultPasswordHash = await bcrypt.hash(defaultPassword, 10);
         const createdStudents = [];
 
         const batch = db.batch();
+        const groupMemberships = [];
 
         for (const student of students) {
-            const { fullName, email } = student;
+            const fullName = student.fullName ||
+                [student.name_en, student.last_name_en].filter(Boolean).join(' ') ||
+                [student.name_tj, student.last_name_tj].filter(Boolean).join(' ');
+            if (!fullName) {
+                return res.status(400).json({ message: 'У каждого студента должно быть имя' });
+            }
             const username = generateUsername(fullName);
             const userRef = db.collection('users').doc();
 
             const studentData = {
-                fullName: fullName || 'Без имени',
-                email: email || `${username}@school.com`,
+                ...student,
+                fullName,
+                email: student.email || `${username}@school.com`,
                 username,
                 passwordHash: defaultPasswordHash,
                 role: 'student',
@@ -49,7 +59,28 @@ exports.importStudents = async (req, res) => {
             };
 
             batch.set(userRef, studentData);
-            createdStudents.push({ id: userRef.id, ...studentData, defaultPassword });
+            const studentGroups = Array.isArray(student.student_groups)
+                ? student.student_groups.filter(Boolean)
+                : [];
+            studentGroups.forEach((groupId) => groupMemberships.push({ groupId, studentId: userRef.id }));
+            createdStudents.push({ id: userRef.id, fullName, email: studentData.email, username });
+        }
+
+        const membershipsByGroup = groupMemberships.reduce((groups, membership) => {
+            if (!groups[membership.groupId]) groups[membership.groupId] = [];
+            groups[membership.groupId].push(membership.studentId);
+            return groups;
+        }, {});
+
+        for (const [groupId, studentIds] of Object.entries(membershipsByGroup)) {
+            const groupRef = db.collection('groups').doc(groupId);
+            const groupSnapshot = await groupRef.get();
+            if (!groupSnapshot.exists) {
+                return res.status(400).json({ message: `Группа ${groupId} не найдена` });
+            }
+            batch.update(groupRef, {
+                studentIds: Array.from(new Set([...(groupSnapshot.data().studentIds || []), ...studentIds]))
+            });
         }
 
         await batch.commit();
@@ -59,7 +90,7 @@ exports.importStudents = async (req, res) => {
             students: createdStudents
         });
     } catch (error) {
-        res.status(500).json({ message: 'Ошибка импорта студентов', error: error.message });
+        res.status(500).json({ message: 'Ошибка импорта студентов' });
     }
 };
 
@@ -69,12 +100,14 @@ exports.createGroup = async (req, res) => {
         const { name, category, teacherIds = [], studentIds = [] } = req.body;
         // category: "language" | "topik" | "other"
 
-        if (!name) {
+        if (typeof name !== 'string' || !name.trim() ||
+            !['language', 'topik', 'other'].includes(category || 'other') ||
+            !Array.isArray(teacherIds) || !Array.isArray(studentIds)) {
             return res.status(400).json({ message: 'Укажите название группы' });
         }
 
         const newGroup = await db.collection('groups').add({
-            name,
+            name: name.trim(),
             category: category || 'other',
             teacherIds,
             studentIds,
@@ -83,7 +116,7 @@ exports.createGroup = async (req, res) => {
 
         res.status(201).json({ id: newGroup.id, message: 'Группа успешно создана' });
     } catch (error) {
-        res.status(500).json({ message: 'Ошибка создания группы', error: error.message });
+        res.status(500).json({ message: 'Ошибка создания группы' });
     }
 };
 
@@ -91,6 +124,9 @@ exports.createGroup = async (req, res) => {
 exports.createSchedule = async (req, res) => {
     try {
         const { groupId, subject, daysOfWeek, time, teacherId } = req.body;
+        if (!groupId || !Array.isArray(daysOfWeek) || daysOfWeek.length === 0) {
+            return res.status(400).json({ message: 'Укажите группу и дни занятий' });
+        }
         // daysOfWeek: ["Пн", "Ср", "Пт"]
 
         const newSchedule = await db.collection('schedules').add({
@@ -104,7 +140,7 @@ exports.createSchedule = async (req, res) => {
 
         res.status(201).json({ id: newSchedule.id, message: 'Расписание добавлено' });
     } catch (error) {
-        res.status(500).json({ message: 'Ошибка создания расписания', error: error.message });
+        res.status(500).json({ message: 'Ошибка создания расписания' });
     }
 };
 
@@ -124,7 +160,7 @@ exports.getUsersByRole = async (req, res) => {
 
         res.json(users);
     } catch (error) {
-        res.status(500).json({ message: 'Ошибка получения пользователей', error: error.message });
+        res.status(500).json({ message: 'Ошибка получения пользователей' });
     }
 };
 

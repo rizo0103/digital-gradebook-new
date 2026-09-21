@@ -14,10 +14,12 @@ exports.getGroupAttendance = async (req, res) => {
         }
 
         const groupData = groupDoc.data();
-        if (role === 'teacher' && !groupData.teacherIds.includes(userId)) {
+        const teacherIds = Array.isArray(groupData.teacherIds) ? groupData.teacherIds : [];
+        const studentIds = Array.isArray(groupData.studentIds) ? groupData.studentIds : [];
+        if (role === 'teacher' && !teacherIds.includes(userId)) {
             return res.status(403).json({ message: 'Доступ к этой группе ограничен' });
         }
-        if (role === 'student' && !groupData.studentIds.includes(userId)) {
+        if (role === 'student' && !studentIds.includes(userId)) {
             return res.status(403).json({ message: 'Доступ к этой группе ограничен' });
         }
 
@@ -43,16 +45,27 @@ exports.getGroupAttendance = async (req, res) => {
 // Простановка / Обновление посещаемости (Admin и Teacher)
 exports.saveAttendance = async (req, res) => {
     try {
-        const { groupId, studentId, date, subject, status } = req.body;
+        const { groupId, studentId, date, subject = '', status } = req.body;
         // status: "present" | "absent" | "late" | "excused"
         const { id: userId, role } = req.user;
+        if (!groupId || !studentId || !date || !['present', 'absent', 'late', 'excused'].includes(status)) {
+            return res.status(400).json({ message: 'Некорректные данные посещаемости' });
+        }
 
         // Проверка доступа учителя
         if (role === 'teacher') {
             const groupDoc = await db.collection('groups').doc(groupId).get();
-            if (!groupDoc.exists || !groupDoc.data().teacherIds.includes(userId)) {
+            const teacherIds = groupDoc.exists && Array.isArray(groupDoc.data().teacherIds)
+                ? groupDoc.data().teacherIds
+                : [];
+            if (!groupDoc.exists || !teacherIds.includes(userId)) {
                 return res.status(403).json({ message: 'У вас нет прав на редактирование этой группы' });
             }
+        }
+
+        const studentDoc = await db.collection('users').doc(studentId).get();
+        if (!studentDoc.exists || studentDoc.data().role !== 'student') {
+            return res.status(400).json({ message: 'Студент не найден' });
         }
 
         const existingDoc = await db.collection('attendance')
@@ -85,6 +98,6 @@ exports.saveAttendance = async (req, res) => {
 
         res.status(201).json({ id: newRecord.id, message: 'Статус посещаемости сохранен' });
     } catch (error) {
-        res.status(500).json({ message: 'Ошибка сохранения посещаемости', error: error.message });
+        res.status(500).json({ message: 'Ошибка сохранения посещаемости' });
     }
 };

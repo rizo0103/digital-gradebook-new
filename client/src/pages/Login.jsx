@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosInstance';
 import { useAuth } from '../context/useAuth';
 import { LogIn, User, Lock, AlertCircle, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
+import logo from '../assets/Logo.png';
 
 const Login = () => {
     const [loginInput, setLoginInput] = useState('');
@@ -113,7 +114,7 @@ const Login = () => {
                     {/* Логотип для МОБИЛЬНЫХ устройств (скрыт на десктопе) */}
                     <div className="flex lg:hidden flex-col items-center text-center mb-6">
                         <img
-                            src="src/assets/Logo.png"
+                            src={logo}
                             alt="Logo"
                             className="h-14 w-auto object-contain mb-3 drop-shadow-[0_0_12px_rgba(15,76,156,0.3)]"
                         />
