@@ -10,6 +10,9 @@ const createFirstAdmin = async () => {
         username = admin.username;
 
     try {
+        if (!adminEmail || !adminPassword) {
+            throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be configured');
+        }
         const existingUser = await db.collection("users").where("email", "==", adminEmail).get();
 
         if (!existingUser.empty) {

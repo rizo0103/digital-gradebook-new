@@ -3,7 +3,13 @@ const { getFirestore } = require('firebase-admin/firestore');
 const path = require('path');
 
 const keyPath = path.resolve(__dirname, '../../serviceAccountKey.json');
-const serviceAccount = require(keyPath);
+let serviceAccount;
+
+try {
+  serviceAccount = require(keyPath);
+} catch (error) {
+  throw new Error(`Firebase service account is missing at ${keyPath}`);
+}
 
 let app;
 

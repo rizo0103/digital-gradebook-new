@@ -82,8 +82,8 @@ const AdminPanel = () => {
 
                 {/* РЕНДЕР ВКЛАДОК */}
                 {activeTab === 'students' && <StudentsTab groups={groups} />}
-                {activeTab === 'groups' && <GroupsTab onGroupCreated={fetchInitialData} />}
-                {activeTab === 'schedule' && <ScheduleTab groups={groups} />}
+                {activeTab === 'groups' && <GroupsTab teachers={teachers} onGroupCreated={fetchInitialData} />}
+                {activeTab === 'schedule' && <ScheduleTab groups={groups} teachers={teachers} />}
 
             </div>
         </div>

@@ -141,7 +141,7 @@ const StudentsTab = ({ groups }) => {
                         <div>
                             <label className="block text-xs font-medium text-slate-400 uppercase mb-1">Группа обучения</label>
                             <CustomDropdown
-                                options={groups.map(g => ({ value: g.name, label: g.name }))}
+                                options={groups.map(g => ({ value: g.id, label: g.name }))}
                                 value={studentForm.student_groups[0] || ''}
                                 onChange={(val) => setStudentForm({ ...studentForm, student_groups: [val] })}
                                 placeholder="-- Выберите группу --"

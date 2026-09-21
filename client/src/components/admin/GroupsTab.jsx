@@ -12,7 +12,7 @@ const categoryOptions = [
     { value: 'other', label: 'Сторонний Предмет' }
 ];
 
-const GroupsTab = ({ onGroupCreated }) => {
+const GroupsTab = ({ teachers, onGroupCreated }) => {
     const [groupForm, setGroupForm] = useState({ name: '', category: 'language', teacherIds: [] });
 
     const handleCreateGroup = async (e) => {
@@ -52,6 +52,16 @@ const GroupsTab = ({ onGroupCreated }) => {
                         options={categoryOptions}
                         value={groupForm.category}
                         onChange={(val) => setGroupForm({ ...groupForm, category: val })}
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Преподаватель</label>
+                    <CustomDropdown
+                        options={teachers.map((teacher) => ({ value: teacher.id, label: teacher.fullName }))}
+                        value={groupForm.teacherIds[0] || ''}
+                        onChange={(val) => setGroupForm({ ...groupForm, teacherIds: [val] })}
+                        placeholder="-- Выберите преподавателя --"
                     />
                 </div>
 

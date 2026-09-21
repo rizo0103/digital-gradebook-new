@@ -3,6 +3,7 @@ import React from 'react';
 import { useAuth } from '../context/useAuth';
 import { LogOut, User, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import logo from '../assets/Logo.png';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
@@ -22,7 +23,7 @@ const Navbar = () => {
                 onClick={() => navigate('/groups')}
             >
                 <img
-                    src="/src/assets/Logo.png"
+                    src={logo}
                     alt="Logo"
                     className="h-7 sm:h-8 w-auto object-contain transition-transform group-hover:scale-105"
                 />
