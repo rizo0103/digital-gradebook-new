@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosInstance';
 import { useAuth } from '../context/useAuth';
-import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
+import { LogIn, User, Lock, AlertCircle } from 'lucide-react';
 
 const Login = () => {
-    const [email, setEmail] = useState('');
+    const [loginInput, setLoginInput] = useState(''); // email или username
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -20,11 +20,12 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await api.post('/auth/login', { email, password });
+            // Передаем loginInput на сервер
+            const response = await api.post('/auth/login', { loginInput, password });
             login(response.data.user, response.data.token);
             navigate('/groups');
         } catch (err) {
-            setError(err.response?.data?.message || 'Неверный email или пароль');
+            setError(err.response?.data?.message || 'Неверный логин или пароль');
         } finally {
             setLoading(false);
         }
@@ -38,10 +39,9 @@ const Login = () => {
 
             <div className="relative w-full max-w-md bg-slate-900/90 backdrop-blur-xl border border-slate-800 p-8 rounded-3xl shadow-2xl shadow-black/80 z-10">
 
-                {/* Шапка формы с местом под логотип .png */}
+                {/* Шапка формы */}
                 <div className="flex flex-col items-center mb-8">
                     <div className="mb-4 flex items-center justify-center">
-                        {/* Замените '/logo.png' на верный путь к вашему файлу логотипа */}
                         <img
                             src="src/assets/Logo.png"
                             alt="Logo"
@@ -65,19 +65,19 @@ const Login = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Email */}
+                    {/* Логин (Email или Username) */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                            Email
+                            Логин / Email
                         </label>
                         <div className="relative">
-                            <Mail className="w-5 h-5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <User className="w-5 h-5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                type="text"
+                                value={loginInput}
+                                onChange={(e) => setLoginInput(e.target.value)}
                                 required
-                                placeholder="teacher@school.com"
+                                placeholder="Email или имя пользователя"
                                 className="w-full bg-slate-950/80 border border-slate-800 text-slate-100 placeholder-slate-600 pl-11 pr-4 py-3 rounded-2xl focus:outline-none focus:border-[#0F4C9C] focus:ring-1 focus:ring-[#0F4C9C] transition text-sm"
                             />
                         </div>
@@ -101,7 +101,7 @@ const Login = () => {
                         </div>
                     </div>
 
-                    {/* Яркая и четко видимая кнопка входа */}
+                    {/* Кнопка входа */}
                     <button
                         type="submit"
                         disabled={loading}
