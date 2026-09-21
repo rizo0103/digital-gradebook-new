@@ -5,6 +5,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const studentRoutes = require('./routes/studentRoutes');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/admin', require('./routes/adminSchedule')); // Добавляем маршрут для генерации расписания
+app.use('/api/students', studentRoutes); // Добавляем маршрут для управления студентами
 
 app.use((err, req, res, next) => {
     console.error(err.stack);

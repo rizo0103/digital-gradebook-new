@@ -3,87 +3,96 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/axiosInstance';
 import { Users, Calendar, UserPlus } from 'lucide-react';
 
-import StudentsTab from '../components/admin/StudentsTab';
+import StudentsTab from '../components/admin/UsersTab';
 import GroupsTab from '../components/admin/GroupsTab';
 import ScheduleTab from '../components/admin/ScheduleTab';
+import StudentsList from '../components/admin/UsersList';
+import GroupsList from '../components/admin/GroupsList';
 
 const AdminPanel = () => {
     const [activeTab, setActiveTab] = useState('students');
-    const [teachers, setTeachers] = useState([]);
     const [groups, setGroups] = useState([]);
 
-    const fetchInitialData = async () => {
+    const fetchGroups = async () => {
         try {
-            const teachersRes = await api.get('/admin/users?role=teacher');
-            const groupsRes = await api.get('/groups');
-            setTeachers(teachersRes.data);
-            setGroups(groupsRes.data);
+            const res = await api.get('/groups');
+            setGroups(res.data);
         } catch (err) {
-            console.error('Ошибка загрузки данных:', err);
+            console.error('Ошибка загрузки групп:', err);
         }
     };
 
     useEffect(() => {
-        let isMounted = true;
-        const loadInitialData = async () => {
-            try {
-                const teachersRes = await api.get('/admin/users?role=teacher');
-                const groupsRes = await api.get('/groups');
-                if (isMounted) {
-                    setTeachers(teachersRes.data);
-                    setGroups(groupsRes.data);
-                }
-            } catch (err) {
-                console.error('Ошибка загрузки данных:', err);
-            }
+        const loadGroups = async () => {
+            await fetchGroups();
         };
-        loadInitialData();
-        return () => { isMounted = false; };
+
+        loadGroups();
     }, []);
 
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-6xl mx-auto space-y-8">
 
-                <div className="mb-8 border-b border-slate-800/80 pb-5">
+                <div className="border-b border-slate-800/80 pb-5">
                     <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
                         Панель Администратора
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                        Управление студентами, группами и генерацией дат расписания
+                        Управление пользователями, группами и генерацией дат расписания
                     </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-8 bg-slate-900/60 p-1.5 rounded-2xl border border-slate-800/80">
+                {/* Навигационные табы */}
+                <div className="flex flex-wrap gap-2 bg-slate-900/60 p-1.5 rounded-2xl border border-slate-800/80">
                     <button
                         onClick={() => setActiveTab('students')}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${activeTab === 'students' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-                            }`}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                            activeTab === 'students' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                        }`}
                     >
-                        <UserPlus className="w-4 h-4" /> Студенты
+                        <UserPlus className="w-4 h-4" /> Пользователи
                     </button>
 
                     <button
                         onClick={() => setActiveTab('groups')}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${activeTab === 'groups' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-                            }`}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                            activeTab === 'groups' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                        }`}
                     >
-                        <Users className="w-4 h-4" /> Создание Групп
+                        <Users className="w-4 h-4" /> Группы
                     </button>
 
                     <button
                         onClick={() => setActiveTab('schedule')}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${activeTab === 'schedule' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-                            }`}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                            activeTab === 'schedule' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                        }`}
                     >
                         <Calendar className="w-4 h-4" /> Расписание Уроков
                     </button>
                 </div>
 
-                {/* РЕНДЕР ВКЛАДОК */}
-                {activeTab === 'students' && <StudentsTab groups={groups} />}
-                {activeTab === 'groups' && <GroupsTab onGroupCreated={fetchInitialData} />}
-                {activeTab === 'schedule' && <ScheduleTab groups={groups} />}
+                {/* Вкладка Пользователи: форма добавления + список управления */}
+                {activeTab === 'students' && (
+                    <div className="space-y-8">
+                        <StudentsTab groups={groups} />
+                        <StudentsList groups={groups} />
+                    </div>
+                )}
+
+                {/* Вкладка Группы: форма добавления + список управления */}
+                {activeTab === 'groups' && (
+                    <div className="space-y-8">
+                        <GroupsTab onGroupCreated={fetchGroups} />
+                        <GroupsList groups={groups} onRefresh={fetchGroups} />
+                    </div>
+                )}
+
+                {/* Вкладка Расписание */}
+                {activeTab === 'schedule' && (
+                    <ScheduleTab groups={groups} />
+                )}
 
             </div>
         </div>

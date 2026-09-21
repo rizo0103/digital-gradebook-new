@@ -127,3 +127,54 @@ exports.getUsersByRole = async (req, res) => {
         res.status(500).json({ message: 'Ошибка получения пользователей', error: error.message });
     }
 };
+
+exports.getStudents = async (req, res, next) => {
+    try {
+        const snapshot = await db.collection('students').get();
+        const students = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        res.json(students);
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.updateStudent = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await db.collection('students').doc(String(id)).update(req.body);
+        res.json({ message: 'Студент обновлен' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.deleteStudent = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await db.collection('students').doc(String(id)).delete();
+        res.json({ message: 'Студент удален' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// --- Группы ---
+exports.updateGroup = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await db.collection('groups').doc(String(id)).update(req.body);
+        res.json({ message: 'Группа обновлена' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.deleteGroup = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await db.collection('groups').doc(String(id)).delete();
+        res.json({ message: 'Группа удалена' });
+    } catch (err) {
+        next(err);
+    }
+};
