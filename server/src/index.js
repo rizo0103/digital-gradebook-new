@@ -15,6 +15,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/admin', require('./routes/adminSchedule')); // Добавляем маршрут для генерации расписания
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
