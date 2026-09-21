@@ -7,6 +7,7 @@ import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import GroupsList from './pages/GroupsList';
 import AttendanceJournal from './pages/AttendanceJournal';
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   return (
@@ -20,6 +21,9 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/groups" element={<GroupsList />} />
               <Route path="/journal/:groupId" element={<AttendanceJournal />} />
+              <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route path="/admin" element={<AdminPanel />} />
+              </Route>
             </Route>
 
             <Route path="*" element={<Navigate to="/groups" replace />} />
