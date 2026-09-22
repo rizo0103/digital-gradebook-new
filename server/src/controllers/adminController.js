@@ -131,6 +131,7 @@ exports.createStudent = async (req, res) => {
 };
 
 // 1. Пакетная загрузка студентов из JSON
+// 1. Пакетная загрузка студентов из JSON с автоматической привязкой к группе по имени
 exports.importStudents = async (req, res) => {
     try {
         const { students, defaultPassword } = req.body;
@@ -166,6 +167,16 @@ exports.importStudents = async (req, res) => {
             const passwordHash = await bcrypt.hash(generatedPassword, 10);
             const userRef = db.collection('users').doc();
 
+            // Извлекаем название группы (поддерживаем student_group, student_groups, group и т.д.)
+            const rawGroup = student.student_group || student.student_groups || student.group || student.group_name || student.groupName;
+            
+            let studentGroups = [];
+            if (Array.isArray(rawGroup)) {
+                studentGroups = rawGroup.map(g => String(g).trim()).filter(Boolean);
+            } else if (rawGroup) {
+                studentGroups = [String(rawGroup).trim()].filter(Boolean);
+            }
+
             const studentData = {
                 ...student,
                 fullName,
@@ -173,35 +184,43 @@ exports.importStudents = async (req, res) => {
                 username,
                 passwordHash,
                 role: 'student',
+                student_groups: studentGroups, // Сохраняем массив групп в документе пользователя
                 createdAt: new Date().toISOString()
             };
 
             batch.set(userRef, studentData);
-            const studentGroups = Array.isArray(student.student_groups)
-                ? student.student_groups.filter(Boolean)
-                : [];
-            studentGroups.forEach((groupId) => groupMemberships.push({ groupId, studentId: userRef.id }));
+
+            // Собираем связи "группа -> студент"
+            studentGroups.forEach((groupName) => {
+                groupMemberships.push({ groupName, studentId: userRef.id });
+            });
+
             createdStudents.push({
                 id: userRef.id,
                 fullName,
                 email: studentData.email,
                 username,
-                password: generatedPassword
+                password: generatedPassword,
+                groups: studentGroups
             });
         }
 
-        const membershipsByGroup = groupMemberships.reduce((groups, membership) => {
-            if (!groups[membership.groupId]) groups[membership.groupId] = [];
-            groups[membership.groupId].push(membership.studentId);
+        // Группируем студентов по имени группы
+        const membershipsByGroupName = groupMemberships.reduce((groups, membership) => {
+            if (!groups[membership.groupName]) groups[membership.groupName] = [];
+            groups[membership.groupName].push(membership.studentId);
             return groups;
         }, {});
 
-        for (const [groupId, studentIds] of Object.entries(membershipsByGroup)) {
-            const groupQuery = db.collection('groups').where('name', '==', groupId).limit(1);
+        // Поиск групп в Firestore по полю 'name' и их обновление
+        for (const [groupName, studentIds] of Object.entries(membershipsByGroupName)) {
+            const groupQuery = db.collection('groups').where('name', '==', groupName).limit(1);
             const groupSnapshot = await groupQuery.get();
 
+            // Если группа не найдена — игнорируем её и переходим к следующей
             if (groupSnapshot.empty) {
-                return res.status(400).json({ message: `Группа ${groupId} не найдена` });
+                console.warn(`Группа "${groupName}" не найдена в Firestore. Пропускаем привязку.`);
+                continue;
             }
 
             const groupDoc = groupSnapshot.docs[0];
@@ -216,6 +235,7 @@ exports.importStudents = async (req, res) => {
             });
         }
 
+        // Фиксируем транзакцию
         await batch.commit();
 
         res.status(201).json({
@@ -223,10 +243,10 @@ exports.importStudents = async (req, res) => {
             students: createdStudents
         });
     } catch (error) {
+        console.error('Import Students Error:', error);
         res.status(500).json({ message: 'Ошибка импорта студентов' });
     }
 };
-
 // 2. Создание группы
 exports.createGroup = async (req, res) => {
     try {

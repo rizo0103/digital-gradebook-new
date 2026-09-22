@@ -1,5 +1,14 @@
 const { db } = require('../config/firebase');
 
+const normalizeAttendanceStatus = (status) => {
+    const normalized = String(status || '').toLowerCase();
+    if (['present', 'was', 'came', 'attended'].includes(normalized)) return 'present';
+    if (['late', 'delayed', 'tardy', 'opozdal'].includes(normalized)) return 'late';
+    if (['absent', 'not_present', 'notpresent', 'missed', 'was_not', 'wasnt', 'notwas', 'not_was'].includes(normalized)) return 'absent';
+    if (normalized === 'excused') return 'excused';
+    return null;
+};
+
 // Получение журнала посещаемости для группы
 exports.getGroupAttendance = async (req, res) => {
     try {
@@ -45,26 +54,30 @@ exports.getGroupAttendance = async (req, res) => {
 // Простановка / Обновление посещаемости (Admin и Teacher)
 exports.saveAttendance = async (req, res) => {
     try {
-        const { groupId, studentId, date, subject = '', status } = req.body;
-        // status: "present" | "absent" | "late" | "excused"
+        const normalizedStatus = normalizeAttendanceStatus(req.body.status);
+        const groupId = String(req.body.groupId || '').trim();
+        const studentId = String(req.body.studentId || '').trim();
+        const date = String(req.body.date || '').trim();
+        const subject = String(req.body.subject || '').trim();
+
         const { id: userId, role } = req.user;
-        if (!groupId || !studentId || !date || !['present', 'absent', 'late', 'excused'].includes(status)) {
+        if (!groupId || !studentId || !date || !normalizedStatus || !['present', 'absent', 'late', 'excused'].includes(normalizedStatus)) {
             return res.status(400).json({ message: 'Некорректные данные посещаемости' });
         }
 
-        // Проверка доступа учителя
         if (role === 'teacher') {
             const groupDoc = await db.collection('groups').doc(groupId).get();
             const teacherIds = groupDoc.exists && Array.isArray(groupDoc.data().teacherIds)
                 ? groupDoc.data().teacherIds
                 : [];
-            if (!groupDoc.exists || !teacherIds.includes(userId)) {
+            if (!groupDoc.exists || !teacherIds.includes(String(userId))) {
                 return res.status(403).json({ message: 'У вас нет прав на редактирование этой группы' });
             }
         }
 
-        const studentDoc = await db.collection('users').doc(studentId).get();
-        if (!studentDoc.exists || studentDoc.data().role !== 'student') {
+        const studentDoc = await db.collection('users').where("id", "==", +studentId).limit(1).get();
+        const student = studentDoc.docs[0].data();
+        if (studentDoc.empty || student.role !== "student") {
             return res.status(400).json({ message: 'Студент не найден' });
         }
 
@@ -79,8 +92,8 @@ exports.saveAttendance = async (req, res) => {
         if (!existingDoc.empty) {
             const docId = existingDoc.docs[0].id;
             await db.collection('attendance').doc(docId).update({
-                status,
-                updatedBy: userId,
+                status: normalizedStatus,
+                updatedBy: String(userId),
                 updatedAt: new Date().toISOString()
             });
             return res.json({ id: docId, message: 'Статус посещаемости обновлен' });
@@ -91,8 +104,8 @@ exports.saveAttendance = async (req, res) => {
             studentId,
             date,
             subject,
-            status,
-            markedBy: userId,
+            status: normalizedStatus,
+            markedBy: String(userId),
             createdAt: new Date().toISOString()
         });
 

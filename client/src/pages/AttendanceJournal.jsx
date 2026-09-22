@@ -15,8 +15,18 @@ const attendanceShort = {
     absent: 'Н'
 };
 
-const statusFor = (attendance, studentId, lesson) =>
-    attendance[`${studentId}:${lesson.date}:${lesson.subject || ''}`] || 'absent';
+const normalizeAttendanceStatus = (status) => {
+    const normalized = String(status || '').toLowerCase();
+    if (['present', 'was', 'came', 'attended'].includes(normalized)) return 'present';
+    if (['late', 'delayed', 'tardy', 'opozdal'].includes(normalized)) return 'late';
+    if (['absent', 'not_present', 'notpresent', 'missed', 'was_not', 'wasnt', 'notwas', 'not_was'].includes(normalized)) return 'absent';
+    return 'absent';
+};
+
+const statusFor = (attendance, studentId, lesson) => {
+    const key = `${String(studentId)}:${String(lesson.date)}:${String(lesson.subject || '')}`;
+    return normalizeAttendanceStatus(attendance[key]);
+};
 
 const AttendanceJournal = () => {
     const { groupId } = useParams();
@@ -45,7 +55,8 @@ const AttendanceJournal = () => {
 
                 const nextAttendance = {};
                 attendanceRes.data.forEach((record) => {
-                    nextAttendance[`${record.studentId}:${record.date}:${record.subject || ''}`] = record.status;
+                    const key = `${String(record.studentId)}:${String(record.date)}:${String(record.subject || '')}`;
+                    nextAttendance[key] = normalizeAttendanceStatus(record.status);
                 });
 
                 const sortedLessons = lessonsRes.data.sort((a, b) => a.date.localeCompare(b.date));
@@ -85,16 +96,19 @@ const AttendanceJournal = () => {
 
     const toggleAttendance = async (studentId, lesson) => {
         if (!canEdit) return;
-        const key = `${studentId}:${lesson.date}:${lesson.subject || ''}`;
+
+        const key = `${String(studentId)}:${String(lesson.date)}:${String(lesson.subject || '')}`;
         const currentStatus = statusFor(attendance, studentId, lesson);
         const nextStatus = cycleStatus(currentStatus);
+
         setAttendance((current) => ({ ...current, [key]: nextStatus }));
+
         try {
             await api.post('/attendance', {
-                groupId,
-                studentId,
-                date: lesson.date,
-                subject: lesson.subject || '',
+                groupId: String(groupId),
+                studentId: String(studentId),
+                date: String(lesson.date),
+                subject: String(lesson.subject || ''),
                 status: nextStatus
             });
         } catch (err) {
