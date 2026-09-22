@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars */
+﻿/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axiosInstance';
 import { Search, Edit, Trash2, Check, X, Users, Shield, GraduationCap, School } from 'lucide-react';
@@ -8,11 +8,10 @@ const fieldClass = "w-full bg-slate-950 border border-slate-800 rounded-lg px-3 
 const UsersList = ({ groups = [] }) => {
     const [users, setUsers] = useState([]);
     const [search, setSearch] = useState('');
-    const [selectedRole, setSelectedRole] = useState('all'); // 'all' | 'student' | 'teacher' | 'admin'
+    const [selectedRole, setSelectedRole] = useState('all');
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({});
 
-    // 1. Загрузка всех пользователей
     const fetchUsers = async () => {
         try {
             const res = await api.get('/admin/users');
@@ -41,17 +40,75 @@ const UsersList = ({ groups = [] }) => {
         };
     }, []);
 
-    // 2. Обработчики действий
+    const getSelectedGroupIds = (user) => {
+        const rawGroups = Array.isArray(user?.student_groups)
+            ? user.student_groups
+            : (Array.isArray(user?.teacher_groups) ? user.teacher_groups : []);
+
+        return Array.from(new Set(rawGroups
+            .map((group) => {
+                const matchedGroup = groups.find((item) => item.id === group || item.name === group);
+                return matchedGroup ? matchedGroup.id : group;
+            })
+            .filter(Boolean)));
+    };
+
+    const getDisplayName = (user) => {
+        const fullName = user?.fullName?.trim();
+        const multilingualName = [
+            user?.name_tj,
+            user?.last_name_tj,
+            user?.name_kr,
+            user?.last_name_kr,
+            user?.name_en,
+            user?.last_name_en,
+        ].filter(Boolean).join(' ').trim();
+
+        return fullName || multilingualName || '—';
+    };
+
     const handleEdit = (user) => {
         setEditingId(user.id);
-        setEditForm({ ...user });
+        setEditForm({
+            ...user,
+            role: user.role || 'student',
+            student_groups: Array.isArray(user.student_groups) ? user.student_groups : [],
+            teacher_groups: Array.isArray(user.teacher_groups) ? user.teacher_groups : [],
+            groupIds: getSelectedGroupIds(user)
+        });
     };
 
     const handleSave = async (id) => {
         try {
-            await api.put(`/admin/users/${id}`, editForm);
+            const selectedGroupIds = Array.isArray(editForm.groupIds)
+                ? editForm.groupIds
+                : getSelectedGroupIds(editForm);
+
+            const nextRole = editForm.role || 'student';
+            const normalizedGroupIds = Array.from(new Set(selectedGroupIds.map(String).filter(Boolean)));
+
+            const payload = {
+                ...editForm,
+                role: nextRole,
+                fullName: (editForm.fullName || '').trim() || [
+                    editForm.name_tj,
+                    editForm.last_name_tj,
+                    editForm.name_kr,
+                    editForm.last_name_kr,
+                    editForm.name_en,
+                    editForm.last_name_en,
+                ].filter(Boolean).join(' ').trim() || editForm.username || 'User',
+                groupIds: normalizedGroupIds,
+                student_groups: nextRole === 'student' ? normalizedGroupIds : [],
+                teacher_groups: nextRole === 'teacher' ? normalizedGroupIds : []
+            };
+
+            delete payload.passwordHash;
+            delete payload.customId;
+
+            await api.put(`/admin/users/${id}`, payload);
             setEditingId(null);
-            fetchUsers();
+            await fetchUsers();
         } catch (err) {
             alert('Ошибка при сохранении данных пользователя');
         }
@@ -61,13 +118,12 @@ const UsersList = ({ groups = [] }) => {
         if (!window.confirm('Вы уверены, что хотите удалить этого пользователя?')) return;
         try {
             await api.delete(`/admin/users/${id}`);
-            fetchUsers();
+            await fetchUsers();
         } catch (err) {
             alert('Ошибка при удалении пользователя');
         }
     };
 
-    // 3. Визуальный бейдж роли
     const renderRoleBadge = (role) => {
         switch (role) {
             case 'admin':
@@ -91,15 +147,18 @@ const UsersList = ({ groups = [] }) => {
         }
     };
 
-    // 4. Фильтрация списка (по роли и по строке поиска)
     const filteredUsers = users.filter((u) => {
         const matchesRole = selectedRole === 'all' || u.role === selectedRole;
         const query = search.toLowerCase();
-        
-        const matchesSearch = 
+
+        const matchesSearch =
+            (u.name_tj || '').toLowerCase().includes(query) ||
+            (u.last_name_tj || '').toLowerCase().includes(query) ||
+            (u.name_kr || '').toLowerCase().includes(query) ||
+            (u.last_name_kr || '').toLowerCase().includes(query) ||
             (u.name_en || '').toLowerCase().includes(query) ||
             (u.last_name_en || '').toLowerCase().includes(query) ||
-            (u.fullname || '').toLowerCase().includes(query) ||
+            (u.fullName || '').toLowerCase().includes(query) ||
             (u.username || '').toLowerCase().includes(query) ||
             (u.email || '').toLowerCase().includes(query) ||
             String(u.id).includes(query);
@@ -109,8 +168,6 @@ const UsersList = ({ groups = [] }) => {
 
     return (
         <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6">
-            
-            {/* ВЕРХНЯЯ ПАНЕЛЬ: Фильтры и Поиск */}
             <div className="flex flex-col gap-4 mb-6">
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                     <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -129,7 +186,6 @@ const UsersList = ({ groups = [] }) => {
                     </div>
                 </div>
 
-                {/* Вкладки выбора роли */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1">
                     {[
                         { id: 'all', label: 'Все' },
@@ -152,7 +208,6 @@ const UsersList = ({ groups = [] }) => {
                 </div>
             </div>
 
-            {/* ТАБЛИЦА ПОЛЬЗОВАТЕЛЕЙ */}
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-300">
                     <thead className="bg-slate-950 text-slate-400 uppercase font-medium border-b border-slate-800">
@@ -176,13 +231,12 @@ const UsersList = ({ groups = [] }) => {
                         ) : (
                             filteredUsers.map((u) => {
                                 const isEditing = editingId === u.id;
-                                const displayName = u.fullname || `${u.name_en || ''} ${u.last_name_en || ''}`.trim() || '—';
+                                const displayName = getDisplayName(u);
 
                                 return (
                                     <tr key={u.id} className="hover:bg-slate-800/30 transition">
                                         <td className="p-3 font-mono text-slate-400">{u.id}</td>
 
-                                        {/* Роль */}
                                         <td className="p-3">
                                             {isEditing ? (
                                                 <select
@@ -199,16 +253,11 @@ const UsersList = ({ groups = [] }) => {
                                             )}
                                         </td>
 
-                                        {/* Имя */}
                                         <td className="p-3">
                                             {isEditing ? (
                                                 <input
-                                                    value={editForm.fullname || editForm.name_en || ''}
-                                                    onChange={(e) => setEditForm({ 
-                                                        ...editForm, 
-                                                        fullname: e.target.value,
-                                                        name_en: e.target.value 
-                                                    })}
+                                                    value={editForm.fullName || ''}
+                                                    onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
                                                     className={fieldClass}
                                                 />
                                             ) : (
@@ -216,7 +265,6 @@ const UsersList = ({ groups = [] }) => {
                                             )}
                                         </td>
 
-                                        {/* Логин / Email */}
                                         <td className="p-3">
                                             {isEditing ? (
                                                 <input
@@ -229,27 +277,40 @@ const UsersList = ({ groups = [] }) => {
                                             )}
                                         </td>
 
-                                        {/* Группа */}
                                         <td className="p-3">
                                             {isEditing ? (
                                                 <select
-                                                    value={editForm.student_groups?.[0] || ''}
-                                                    onChange={(e) => setEditForm({ ...editForm, student_groups: [e.target.value] })}
-                                                    className={fieldClass}
+                                                    multiple
+                                                    value={editForm.groupIds || getSelectedGroupIds(u)}
+                                                    onChange={(e) => {
+                                                        const selected = Array.from(e.target.selectedOptions, (option) => option.value);
+                                                        setEditForm({ ...editForm, groupIds: selected, student_groups: selected, teacher_groups: selected });
+                                                    }}
+                                                    className={`${fieldClass} min-h-[88px]`}
                                                 >
-                                                    <option value="">Без группы</option>
                                                     {groups.map((g) => (
-                                                        <option key={g.id || g.name} value={g.name}>{g.name}</option>
+                                                        <option key={g.id || g.name} value={g.id || g.name}>{g.name}</option>
                                                     ))}
                                                 </select>
                                             ) : (
-                                                <span className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md font-medium text-[11px]">
-                                                    {Array.isArray(u.student_groups) ? (u.student_groups[0] || '—') : (u.student_groups || '—')}
-                                                </span>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {(() => {
+                                                        const selectedGroups = getSelectedGroupIds(u);
+                                                        return selectedGroups.length > 0
+                                                            ? selectedGroups.map((groupId) => {
+                                                                const group = groups.find((item) => item.id === groupId || item.name === groupId);
+                                                                return (
+                                                                    <span key={groupId} className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md font-medium text-[11px]">
+                                                                        {group ? group.name : groupId}
+                                                                    </span>
+                                                                );
+                                                            })
+                                                            : <span className="text-slate-500">—</span>;
+                                                    })()}
+                                                </div>
                                             )}
                                         </td>
 
-                                        {/* Телефон */}
                                         <td className="p-3">
                                             {isEditing ? (
                                                 <input
@@ -262,7 +323,6 @@ const UsersList = ({ groups = [] }) => {
                                             )}
                                         </td>
 
-                                        {/* Кнопки управления */}
                                         <td className="p-3 text-right">
                                             {isEditing ? (
                                                 <div className="flex justify-end gap-1">

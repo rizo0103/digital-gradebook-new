@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const studentController = require('../controllers/studentController');
+const adminController = require('../controllers/adminController');
+const authMiddleware = require('../middlewares/authMiddleware');
+const roleMiddleware = require('../middlewares/roleMiddleware');
 
-router.get('/', studentController.getStudents);
-router.post('/create', studentController.createStudent);
-router.post('/import-json', studentController.importStudents);
-router.put('/:id', studentController.updateStudent);
-router.delete('/:id', studentController.deleteStudent);
+router.use(authMiddleware, roleMiddleware(['admin']));
+
+router.get('/', adminController.getStudents);
+router.post('/create', adminController.createStudent);
+router.post('/import-json', adminController.importStudents);
+router.put('/:id', adminController.updateStudent);
+router.delete('/:id', adminController.deleteStudent);
 
 module.exports = router;

@@ -3,6 +3,18 @@ import { useParams } from 'react-router-dom';
 import api from '../api/axiosInstance';
 import { useAuth } from '../context/useAuth';
 
+const attendanceOrder = ['present', 'late', 'absent'];
+const attendanceLabels = {
+    present: 'Был',
+    late: 'Опоздал',
+    absent: 'Не был'
+};
+const attendanceShort = {
+    present: 'Б',
+    late: 'О',
+    absent: 'Н'
+};
+
 const statusFor = (attendance, studentId, lesson) =>
     attendance[`${studentId}:${lesson.date}:${lesson.subject || ''}`] || 'absent';
 
@@ -14,6 +26,7 @@ const AttendanceJournal = () => {
     const [attendance, setAttendance] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState('');
 
     const canEdit = user?.role === 'admin' || user?.role === 'teacher';
 
@@ -34,9 +47,13 @@ const AttendanceJournal = () => {
                 attendanceRes.data.forEach((record) => {
                     nextAttendance[`${record.studentId}:${record.date}:${record.subject || ''}`] = record.status;
                 });
+
+                const sortedLessons = lessonsRes.data.sort((a, b) => a.date.localeCompare(b.date));
+                const monthList = [...new Set(sortedLessons.map((lesson) => lesson.date.slice(0, 7)))].sort();
                 setStudents(studentsRes.data);
-                setLessons(lessonsRes.data);
+                setLessons(sortedLessons);
                 setAttendance(nextAttendance);
+                setSelectedMonth(monthList.length > 0 ? monthList[monthList.length - 1] : '');
             } catch (err) {
                 if (!cancelled) setError(err.response?.data?.message || 'Не удалось загрузить журнал');
             } finally {
@@ -48,12 +65,29 @@ const AttendanceJournal = () => {
         return () => { cancelled = true; };
     }, [groupId]);
 
-    const lessonCount = useMemo(() => lessons.length, [lessons]);
+    const availableMonths = useMemo(() => {
+        const months = [...new Set(lessons.map((lesson) => lesson.date.slice(0, 7)))];
+        return months.sort();
+    }, [lessons]);
+
+    const filteredLessons = useMemo(() => {
+        if (!selectedMonth) return lessons;
+        return lessons.filter((lesson) => lesson.date.startsWith(selectedMonth));
+    }, [lessons, selectedMonth]);
+
+    const lessonCount = useMemo(() => filteredLessons.length, [filteredLessons]);
+
+    const cycleStatus = (currentStatus) => {
+        const currentIndex = attendanceOrder.indexOf(currentStatus);
+        const nextIndex = (currentIndex + 1) % attendanceOrder.length;
+        return attendanceOrder[nextIndex];
+    };
 
     const toggleAttendance = async (studentId, lesson) => {
         if (!canEdit) return;
         const key = `${studentId}:${lesson.date}:${lesson.subject || ''}`;
-        const nextStatus = statusFor(attendance, studentId, lesson) === 'present' ? 'absent' : 'present';
+        const currentStatus = statusFor(attendance, studentId, lesson);
+        const nextStatus = cycleStatus(currentStatus);
         setAttendance((current) => ({ ...current, [key]: nextStatus }));
         try {
             await api.post('/attendance', {
@@ -64,7 +98,7 @@ const AttendanceJournal = () => {
                 status: nextStatus
             });
         } catch (err) {
-            setAttendance((current) => ({ ...current, [key]: nextStatus === 'present' ? 'absent' : 'present' }));
+            setAttendance((current) => ({ ...current, [key]: currentStatus }));
             setError(err.response?.data?.message || 'Не удалось сохранить отметку');
         }
     };
@@ -75,50 +109,79 @@ const AttendanceJournal = () => {
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
-                <div className="flex items-center justify-between mb-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
                     <h1 className="text-xl sm:text-2xl font-bold">Журнал посещаемости</h1>
-                    <span className="text-xs text-slate-400">Занятий: {lessonCount}</span>
+                    <div className="flex items-center gap-3">
+                        {availableMonths.length > 0 && (
+                            <label className="flex items-center gap-2 text-xs text-slate-300">
+                                <span>Месяц:</span>
+                                <select
+                                    value={selectedMonth}
+                                    onChange={(e) => setSelectedMonth(e.target.value)}
+                                    className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                                >
+                                    {availableMonths.map((month) => (
+                                        <option key={month} value={month}>
+                                            {new Date(`${month}-01T00:00:00`).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                        )}
+                        <span className="text-xs text-slate-400">Занятий: {lessonCount}</span>
+                    </div>
                 </div>
                 {error && <div className="mb-4 p-3 rounded-xl border border-rose-800 bg-rose-950/40 text-rose-300 text-sm">{error}</div>}
-                <div className="overflow-x-auto rounded-2xl border border-slate-800">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-900 border-b border-slate-800 text-xs text-slate-400">
-                                <th className="p-3 sticky left-0 bg-slate-900">Студент</th>
-                                {lessons.map((lesson) => (
-                                    <th key={lesson.id} className="p-3 text-center min-w-[70px]">
-                                        {new Date(`${lesson.date}T00:00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'numeric' })}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {students.map((student) => (
-                                <tr key={student.id} className="border-b border-slate-800/50 hover:bg-slate-900/30">
-                                    <td className="p-3 font-medium text-sm text-slate-200 whitespace-nowrap sticky left-0 bg-slate-950">
-                                        {student.name_en || student.fullName} {student.last_name_en}
-                                    </td>
-                                    {lessons.map((lesson) => {
-                                        const status = statusFor(attendance, student.id, lesson);
-                                        return (
-                                            <td key={lesson.id} className="p-3 text-center">
-                                                <button
-                                                    type="button"
-                                                    disabled={!canEdit}
-                                                    onClick={() => toggleAttendance(student.id, lesson)}
-                                                    className={`w-8 h-8 rounded-lg text-xs font-bold ${status === 'present' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500'} ${canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
-                                                    title={status}
-                                                >
-                                                    {status === 'present' ? '+' : '-'}
-                                                </button>
-                                            </td>
-                                        );
-                                    })}
+
+                {filteredLessons.length === 0 ? (
+                    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-slate-400">
+                        Для выбранного месяца нет занятий по расписанию.
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto rounded-2xl border border-slate-800">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-900 border-b border-slate-800 text-xs text-slate-400">
+                                    <th className="p-3 sticky left-0 bg-slate-900">Студент</th>
+                                    {filteredLessons.map((lesson) => (
+                                        <th key={lesson.id || `${lesson.date}-${lesson.subject}`} className="p-3 text-center min-w-[82px]">
+                                            <div className="font-medium text-slate-300">{new Date(`${lesson.date}T00:00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'numeric' })}</div>
+                                            <div className="text-[10px] uppercase text-slate-500 mt-1">
+                                                {new Date(`${lesson.date}T00:00:00`).toLocaleDateString('ru-RU', { weekday: 'short' })}
+                                            </div>
+                                        </th>
+                                    ))}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {students.map((student) => (
+                                    <tr key={student.id} className="border-b border-slate-800/50 hover:bg-slate-900/30">
+                                        <td className="p-3 font-medium text-sm text-slate-200 whitespace-nowrap sticky left-0 bg-slate-950">
+                                            {student.fullName || student.id}
+                                        </td>
+                                        {filteredLessons.map((lesson) => {
+                                            const status = statusFor(attendance, student.id, lesson);
+                                            const statusColor = status === 'present' ? 'bg-emerald-600 text-white' : status === 'late' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300';
+                                            return (
+                                                <td key={`${student.id}-${lesson.id || lesson.date}-${lesson.subject || ''}`} className="p-3 text-center">
+                                                    <button
+                                                        type="button"
+                                                        disabled={!canEdit}
+                                                        onClick={() => toggleAttendance(student.id, lesson)}
+                                                        className={`w-9 h-9 rounded-lg text-xs font-bold ${statusColor} ${canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                                                        title={`${attendanceLabels[status] || attendanceLabels.absent} · ${lesson.subject || 'Урок'}`}
+                                                    >
+                                                        {attendanceShort[status] || 'Н'}
+                                                    </button>
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
     );

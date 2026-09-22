@@ -88,9 +88,21 @@ const UsersTab = ({ groups = [] }) => {
     // ==========================================
     // 2. ОБРАБОТЧИК ДЛЯ СТУДЕНТА (ВРУЧНУЮ)
     // ==========================================
+    const showStudentCredentials = (students = []) => {
+        const credentials = students
+            .map((student) => `• ${student.username} / ${student.password}`)
+            .join('\n');
+
+        if (credentials) {
+            window.alert(`Данные нового студента:\n\n${credentials}`);
+        }
+    };
+
     const handleCreateStudentManual = async (e) => {
         e.preventDefault();
         setStatus({ type: 'loading', message: 'Создание студента...' });
+
+        console.log('Отправляемые данные студента:', studentForm);
 
         try {
             const studentPayload = {
@@ -101,15 +113,18 @@ const UsersTab = ({ groups = [] }) => {
                 created_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
             };
 
-            // Отправляем массив с одним студентом на универсальный эндпоинт импорта
             const response = await api.post('/admin/import-students', { students: [studentPayload] });
+            const createdStudents = response.data?.students || [];
+
+            if (createdStudents.length > 0) {
+                showStudentCredentials(createdStudents);
+            }
 
             setStatus({
                 type: 'success',
                 message: `Студент ${studentForm.name_en || studentForm.name_tj || 'пользователь'} успешно добавлен!`
             });
 
-            // Очистка формы
             setStudentForm({
                 id: '', name_tj: '', last_name_tj: '', name_en: '', last_name_en: '',
                 name_kr: '', last_name_kr: '', date_of_birth: '', address: '',
@@ -141,7 +156,6 @@ const UsersTab = ({ groups = [] }) => {
         try {
             const parsedData = JSON.parse(jsonInput);
 
-            // Валидация и подготовка массива
             const formattedData = (Array.isArray(parsedData) ? parsedData : [parsedData]).map((s) => ({
                 ...s,
                 role: 'student',
@@ -150,6 +164,11 @@ const UsersTab = ({ groups = [] }) => {
             }));
 
             const response = await api.post('/admin/import-students', { students: formattedData });
+            const createdStudents = response.data?.students || [];
+
+            if (createdStudents.length > 0) {
+                showStudentCredentials(createdStudents);
+            }
 
             setStatus({
                 type: 'success',

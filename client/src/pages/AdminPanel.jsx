@@ -90,7 +90,7 @@ const AdminPanel = () => {
                 {activeTab === 'groups' && (
                     <div className="space-y-8">
                         <GroupsTab teachers={teachers} onGroupCreated={fetchInitialData} />
-                        <GroupsList groups={groups} onRefresh={fetchInitialData} />
+                        <GroupsList groups={groups} teachers={teachers} onRefresh={fetchInitialData} />
                     </div>
                 )}
 

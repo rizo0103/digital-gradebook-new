@@ -5,18 +5,25 @@ import { Users, Edit, Trash2, Check, X } from 'lucide-react';
 
 const fieldClass = "w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500";
 
-const GroupsList = ({ groups, onRefresh }) => {
+const GroupsList = ({ groups, teachers = [], onRefresh }) => {
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({});
 
     const handleEdit = (group) => {
         setEditingId(group.id);
-        setEditForm({ ...group });
+        setEditForm({
+            ...group,
+            teacherIds: Array.isArray(group.teacherIds) ? group.teacherIds : []
+        });
     };
 
     const handleSave = async (id) => {
         try {
-            await updateGroup(id, editForm);
+            await updateGroup(id, {
+                ...editForm,
+                teacherIds: Array.isArray(editForm.teacherIds) ? editForm.teacherIds : [],
+                studentIds: Array.isArray(editForm.studentIds) ? editForm.studentIds : []
+            });
             setEditingId(null);
             onRefresh();
         } catch (err) {
@@ -46,6 +53,7 @@ const GroupsList = ({ groups, onRefresh }) => {
                         <tr>
                             <th className="p-3">Название</th>
                             <th className="p-3">Категория</th>
+                            <th className="p-3">Преподаватели</th>
                             <th className="p-3 text-right">Действия</th>
                         </tr>
                     </thead>
@@ -76,6 +84,35 @@ const GroupsList = ({ groups, onRefresh }) => {
                                         </select>
                                     ) : (
                                         <span className="capitalize">{g.category}</span>
+                                    )}
+                                </td>
+                                <td className="p-3">
+                                    {editingId === g.id ? (
+                                        <select
+                                            multiple
+                                            value={editForm.teacherIds || []}
+                                            onChange={(e) => {
+                                                const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
+                                                setEditForm({ ...editForm, teacherIds: selectedOptions });
+                                            }}
+                                            className={`${fieldClass} min-h-[90px]`}
+                                        >
+                                            {teachers.length === 0 ? (
+                                                <option value="">Нет преподавателей</option>
+                                            ) : (
+                                                teachers.map((teacher) => (
+                                                    <option key={teacher.id} value={teacher.id}>
+                                                        {teacher.fullName || teacher.username || teacher.email || teacher.id}
+                                                    </option>
+                                                ))
+                                            )}
+                                        </select>
+                                    ) : (
+                                        <span className="text-slate-400">
+                                            {Array.isArray(g.teacherIds) && g.teacherIds.length > 0
+                                                ? g.teacherIds.length
+                                                : '0'} преподавателей
+                                        </span>
                                     )}
                                 </td>
                                 <td className="p-3 text-right">

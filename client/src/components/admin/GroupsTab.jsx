@@ -18,7 +18,11 @@ const GroupsTab = ({ teachers, onGroupCreated }) => {
     const handleCreateGroup = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/admin/groups', groupForm);
+            await api.post('/admin/groups', {
+                ...groupForm,
+                studentIds: [],
+                teacherIds: Array.isArray(groupForm.teacherIds) ? groupForm.teacherIds : []
+            });
             alert('Группа успешно создана!');
             setGroupForm({ name: '', category: 'language', teacherIds: [] });
             if (onGroupCreated) onGroupCreated();
@@ -56,13 +60,26 @@ const GroupsTab = ({ teachers, onGroupCreated }) => {
                 </div>
 
                 <div>
-                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Преподаватель</label>
-                    <CustomDropdown
-                        options={teachers.map((teacher) => ({ value: teacher.id, label: teacher.fullName }))}
-                        value={groupForm.teacherIds[0] || ''}
-                        onChange={(val) => setGroupForm({ ...groupForm, teacherIds: [val] })}
-                        placeholder="-- Выберите преподавателя --"
-                    />
+                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Преподаватели</label>
+                    <select
+                        multiple
+                        value={groupForm.teacherIds || []}
+                        onChange={(e) => {
+                            const selected = Array.from(e.target.selectedOptions, (option) => option.value);
+                            setGroupForm({ ...groupForm, teacherIds: selected });
+                        }}
+                        className={`${fieldInputClass} min-h-[120px]`}
+                    >
+                        {teachers.length === 0 ? (
+                            <option value="">Нет доступных преподавателей</option>
+                        ) : (
+                            teachers.map((teacher) => (
+                                <option key={teacher.id} value={teacher.id}>
+                                    {teacher.fullName || teacher.username || teacher.email || teacher.id}
+                                </option>
+                            ))
+                        )}
+                    </select>
                 </div>
 
                 <button
