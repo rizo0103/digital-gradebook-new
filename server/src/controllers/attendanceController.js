@@ -23,12 +23,14 @@ exports.getGroupAttendance = async (req, res) => {
         }
 
         const groupData = groupDoc.data();
-        const teacherIds = Array.isArray(groupData.teacherIds) ? groupData.teacherIds : [];
-        const studentIds = Array.isArray(groupData.studentIds) ? groupData.studentIds : [];
-        if (role === 'teacher' && !teacherIds.includes(userId)) {
+        const teacherIds = Array.isArray(groupData.teacherIds) ? groupData.teacherIds.map(String) : [];
+        const studentIds = Array.isArray(groupData.studentIds) ? groupData.studentIds.map(String) : [];
+        const normalizedUserId = String(userId); 
+
+        if (role === 'teacher' && !teacherIds.includes(normalizedUserId)) {
             return res.status(403).json({ message: 'Доступ к этой группе ограничен' });
         }
-        if (role === 'student' && !studentIds.includes(userId)) {
+        if (role === 'student' && !studentIds.includes(normalizedUserId)) {
             return res.status(403).json({ message: 'Доступ к этой группе ограничен' });
         }
 
@@ -37,9 +39,8 @@ exports.getGroupAttendance = async (req, res) => {
         if (date) query = query.where('date', '==', date);
         if (subject) query = query.where('subject', '==', subject);
 
-        // Студенты видят только свои отметки
         if (role === 'student') {
-            query = query.where('studentId', '==', userId);
+            query = query.where('studentId', '==', String(userId));
         }
 
         const snapshot = await query.get();
@@ -75,9 +76,8 @@ exports.saveAttendance = async (req, res) => {
             }
         }
 
-        const studentDoc = await db.collection('users').where("id", "==", +studentId).limit(1).get();
-        const student = studentDoc.docs[0].data();
-        if (studentDoc.empty || student.role !== "student") {
+        const studentDoc = await db.collection('users').doc(studentId).get();
+        if (!studentDoc.exists || studentDoc.data().role !== 'student') {
             return res.status(400).json({ message: 'Студент не найден' });
         }
 

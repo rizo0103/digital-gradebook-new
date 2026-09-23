@@ -19,8 +19,8 @@ const AdminPanel = () => {
             const [groupsRes, teachersRes] = await Promise.all([
                 api.get('/groups'),
                 api.get('/admin/users?role=teacher')
-            ]);
-            setGroups(groupsRes.data);
+            ]);            
+            setGroups(groupsRes.data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)));
             setTeachers(teachersRes.data);
         } catch (err) {
             console.error('Ошибка загрузки данных:', err);

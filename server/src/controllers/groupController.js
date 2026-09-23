@@ -1,20 +1,31 @@
 const { db } = require('../config/firebase');
 
+const normalizeIdValue = (value) => String(value ?? '').trim();
+const normalizeIdList = (value) => {
+    if (!Array.isArray(value)) return [];
+    return value.map(normalizeIdValue).filter(Boolean);
+};
+
 // Получение списка доступных групп
 exports.getGroups = async (req, res) => {
     try {
         const { id: userId, role } = req.user;
         let groups = [];
+        const normalizedUserId = normalizeIdValue(userId);
 
         if (role === 'admin') {
             const snapshot = await db.collection('groups').get();
             groups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } else if (role === 'teacher') {
-            const snapshot = await db.collection('groups').where('teacherIds', 'array-contains', userId).get();
-            groups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const snapshot = await db.collection('groups').get();
+            groups = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter((group) => normalizeIdList(group.teacherIds).includes(normalizedUserId));
         } else if (role === 'student') {
-            const snapshot = await db.collection('groups').where('studentIds', 'array-contains', userId).get();
-            groups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const snapshot = await db.collection('groups').get();
+            groups = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter((group) => normalizeIdList(group.studentIds).includes(normalizedUserId));
         }
 
         res.json(groups);
@@ -52,12 +63,19 @@ exports.createGroup = async (req, res) => {
 exports.getGroupStudents = async (req, res) => {
     try {
         const group = await getAccessibleGroup(req);
-        const studentIds = req.user.role === 'student'
-            ? [req.user.id]
-            : (Array.isArray(group.studentIds) ? group.studentIds : []);
-        if (studentIds.length === 0) return res.json([]);
+        const normalizedStudentIds = normalizeIdList(group.studentIds);
 
-        const users = await Promise.all(studentIds.map((studentId) => db.collection('users').doc(studentId).get()));
+        if (req.user.role === 'student') {
+            const ownId = normalizeIdValue(req.user.id);
+            const studentDoc = await db.collection('users').doc(ownId).get();
+            if (!studentDoc.exists) return res.json([]);
+            const { passwordHash, ...publicData } = studentDoc.data();
+            return res.json([{ id: studentDoc.id, ...publicData }]);
+        }
+
+        if (normalizedStudentIds.length === 0) return res.json([]);
+
+        const users = await Promise.all(normalizedStudentIds.map((studentId) => db.collection('users').doc(studentId).get()));
         res.json(users.filter((doc) => doc.exists).map((doc) => {
             const { passwordHash, ...publicData } = doc.data();
             return { id: doc.id, ...publicData };
@@ -94,11 +112,13 @@ async function getAccessibleGroup(req) {
 
     const group = snapshot.data();
     const { id: userId, role } = req.user;
-    const teacherIds = Array.isArray(group.teacherIds) ? group.teacherIds : [];
-    const studentIds = Array.isArray(group.studentIds) ? group.studentIds : [];
+    const normalizedUserId = normalizeIdValue(userId);
+    const teacherIds = normalizeIdList(group.teacherIds);
+    const studentIds = normalizeIdList(group.studentIds);
+
     if (role !== 'admin' &&
-        ((role === 'teacher' && !teacherIds.includes(userId)) ||
-            (role === 'student' && !studentIds.includes(userId)))) {
+        ((role === 'teacher' && !teacherIds.includes(normalizedUserId)) ||
+            (role === 'student' && !studentIds.includes(normalizedUserId)))) {
         const error = new Error('Доступ к этой группе ограничен');
         error.statusCode = 403;
         throw error;
