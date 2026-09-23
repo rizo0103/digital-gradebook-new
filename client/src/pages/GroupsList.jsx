@@ -13,7 +13,7 @@ const GroupsList = () => {
     const fetchGroups = async () => {
       try {
         const response = await api.get('/groups');
-        setGroups(response.data);
+        setGroups(response.data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)));
       } catch (err) {
         console.error('Ошибка загрузки групп', err);
       } finally {
