@@ -178,8 +178,17 @@ exports.importStudents = async (req, res) => {
             }
 
             const studentData = {
-                ...student,
                 fullName,
+                name_en: student.name_en,
+                last_name_en: student.last_name_en,
+                name_tj: student.name_tj,
+                last_name_tj: student.last_name_tj,
+                name_kr: student.name_kr,
+                last_name_kr: student.last_name_kr,
+                date_of_birth: student.date_of_birth,
+                gender: student.gender,
+                nationality: student.nationality,
+                phone: student.phone,
                 email: student.email || `${username}@school.com`,
                 username,
                 passwordHash,
@@ -359,8 +368,6 @@ exports.updateUser = async (req, res) => {
         const { id } = req.params;
         // Извлекаем id и customId, чтобы не затирать системные поля
         const { id: bodyId, customId, role, student_groups, teacher_groups, groupIds, ...updateData } = req.body;
-
-        console.log(req.body);
 
         const normalizedRole = typeof role === 'string' ? role : 'student';
         const nextGroupIds = normalizeArray(groupIds || (normalizedRole === 'teacher' ? teacher_groups : student_groups));
