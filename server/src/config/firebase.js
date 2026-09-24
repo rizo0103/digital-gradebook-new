@@ -1,23 +1,20 @@
 const { initializeApp, getApps, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
+const fs = require('fs');
 const path = require('path');
 
 const keyPath = path.resolve(__dirname, '../../serviceAccountKey.json');
-let serviceAccount;
-
-try {
-  serviceAccount = require(keyPath);
-} catch (error) {
-  throw new Error(`Firebase service account is missing at ${keyPath}`);
-}
 
 let app;
 
 // Safely check if any app has already been initialized
 if (getApps().length === 0) {
-  app = initializeApp({
-    credential: cert(serviceAccount)
-  });
+  if (fs.existsSync(keyPath)) {
+    const serviceAccount = require(keyPath);
+    app = initializeApp({ credential: cert(serviceAccount) });
+  } else {
+    app = initializeApp();
+  }
 } else {
   // If already initialized, look up the existing default app
   app = getApps()[0]; 

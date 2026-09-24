@@ -12,6 +12,24 @@ Express API backed by Firebase Firestore.
 
 The API listens on port `5000` by default. `CLIENT_ORIGIN` accepts a comma-separated list of allowed frontend origins.
 
+## Deploy to Google Cloud Run
+
+Build and deploy the image from this directory:
+
+```bash
+gcloud builds submit --tag gcr.io/PROJECT_ID/digital-gradebook-server
+gcloud run deploy digital-gradebook-server \
+  --image gcr.io/PROJECT_ID/digital-gradebook-server \
+  --platform managed \
+  --region REGION \
+  --allow-unauthenticated \
+  --set-env-vars PORT=8080,JWT_SECRET=YOUR_SECRET,CLIENT_ORIGIN=https://YOUR_FRONTEND_DOMAIN
+```
+
+Replace `PROJECT_ID`, `REGION`, and the placeholder values with your Google Cloud project, deployment region, and production configuration. Cloud Run supplies the `PORT` variable automatically; the Dockerfile defaults it to `8080`.
+
+For local development, keep `serviceAccountKey.json` at the server root. It is ignored by Git and Docker. In Cloud Run, deploy the service with a Google service account that has the required Firestore permissions; when the local key is absent, the server uses Google Application Default Credentials automatically.
+
 ## Main endpoints
 
 - `POST /api/auth/login`
