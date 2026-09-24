@@ -1,0 +1,41 @@
+{
+    "navbar": {
+        "adminPanel": "Admin Panel",
+        "signOut": "Sign Out"
+    },
+
+    "login": {
+        "absent": "Absent",
+        "present": "Present",
+        "title": "Digital journal of attendance",
+        "description": "Quick and convenient student attendance tracking \n in lessons with separeted access rights",
+        "access": "Secure access",
+        "response": "Quick response",
+        "signIn": "Sign In",
+        "secondary": "Please, type your login or email and password",
+        "loginOrEmail": "Login or Email",
+        "password": "Password",
+        "button": "Sign In",
+        "authorization": "Authorization...",
+        "rights": "All rights reserved"
+    },
+
+    "groups": {
+        "available": "Available Groups",
+        "loading": "Loading groups...",
+        "description": "Choose group to view or fill out the journal",
+        "total": "Total",
+        "students": "Students",
+        "notFound": "Groups were not found",
+        "empty": "You are not linked to any groups yet, or the list is empty"
+    },
+
+    "journal": {
+        "cancelled": "Can not load the journal",
+        "can'tSave": "Can not save the status",
+        "loading": "Loading journal...",
+        "error": "An error occured",
+        "title": "Attendance journal",
+        "month": "Month"
+    }
+}

@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import GroupsList from './pages/GroupsList';
 import AttendanceJournal from './pages/AttendanceJournal';
 import AdminPanel from './pages/AdminPanel';
+import { useTranslation } from 'react-i18next';
 
 function App() {
   return (

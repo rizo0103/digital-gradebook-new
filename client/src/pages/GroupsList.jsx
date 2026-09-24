@@ -2,9 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosInstance';
-import { Users, ChevronRight, GraduationCap, FolderX } from 'lucide-react';
+import { Users, ChevronRight, GraduationCap, FolderX, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const GroupsList = () => {
+  const { t } = useTranslation();
+
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -25,11 +28,11 @@ const GroupsList = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center p-4">
-        <div className="flex items-center gap-3 text-slate-400 font-medium text-sm sm:text-base">
-          <div className="w-5 h-5 border-2 border-[#0F4C9C] border-t-transparent rounded-full animate-spin" />
-          <span>Загрузка групп...</span>
-        </div>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+          <Loader2 className="w-7 h-7 text-[#0F4C9C] animate-spin mr-2" />{" "}
+          <span className="text-slate-300 font-medium text-sm sm:text-base tracking-wide">
+            {t('groups.loading')}
+          </span>
       </div>
     );
   }
@@ -46,16 +49,16 @@ const GroupsList = () => {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                Доступные группы
+                {t('groups.available')}
               </h1>
               <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                Выберите группу для просмотра или заполнения журнала
+                {t('groups.description')}
               </p>
             </div>
           </div>
 
           <span className="self-start sm:self-auto text-xs font-semibold px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-lg sm:rounded-xl text-slate-400 shrink-0">
-            Всего: {groups.length}
+            {t('groups.total')}: {groups.length}
           </span>
         </div>
 
@@ -63,9 +66,9 @@ const GroupsList = () => {
         {groups.length === 0 ? (
           <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-center max-w-md mx-auto my-6">
             <FolderX className="w-10 h-10 sm:w-12 sm:h-12 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base sm:text-lg font-semibold text-slate-200">Группы не найдены</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-slate-200">{t('groups.notFound')}</h3>
             <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              У вас пока нет привязанных групп или список пуст.
+              {t('groups.empty')}
             </p>
           </div>
         ) : (
@@ -91,7 +94,7 @@ const GroupsList = () => {
                     <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
                       <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 shrink-0" />
                       <p className="text-xs font-medium text-slate-400 truncate">
-                        Студентов: <span className="text-slate-200">{group.studentIds?.length || 0}</span>
+                        {t('groups.students')}: <span className="text-slate-200">{group.studentIds?.length || 0}</span>
                       </p>
                     </div>
                   </div>

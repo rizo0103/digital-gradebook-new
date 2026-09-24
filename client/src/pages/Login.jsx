@@ -5,8 +5,11 @@ import api from '../api/axiosInstance';
 import { useAuth } from '../context/useAuth';
 import { LogIn, User, Lock, AlertCircle, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
 import logo from '../assets/Logo.png';
+import { useTranslation } from 'react-i18next';
 
 const Login = () => {
+    const { t } = useTranslation();
+
     const [loginInput, setLoginInput] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -61,10 +64,10 @@ const Login = () => {
 
                             {/* Интерактивные иконки статусов в графике */}
                             <rect x="240" y="125" width="80" height="28" rx="8" fill="#8C1D35" fillOpacity="0.15" stroke="#8C1D35" strokeOpacity="0.4" />
-                            <text x="280" y="143" fill="#F43F5E" fontSize="10" fontWeight="bold" textAnchor="middle">Н / Б</text>
+                            <text x="280" y="143" fill="#F43F5E" fontSize="10" fontWeight="bold" textAnchor="middle">{t('login.absent')}</text>
 
                             <rect x="240" y="165" width="80" height="28" rx="8" fill="#0F4C9C" fillOpacity="0.15" stroke="#0F4C9C" strokeOpacity="0.4" />
-                            <text x="280" y="183" fill="#38BDF8" fontSize="10" fontWeight="bold" textAnchor="middle">БЫЛ</text>
+                            <text x="280" y="183" fill="#38BDF8" fontSize="10" fontWeight="bold" textAnchor="middle">{t('login.present')}</text>
 
                             {/* Декоративный соединительный график */}
                             <path d="M120 170 C 170 120, 190 200, 240 140" stroke="url(#paint0_linear)" strokeWidth="3" strokeLinecap="round" />
@@ -79,28 +82,28 @@ const Login = () => {
                     </div>
 
                     <h1 className="text-2xl font-extrabold text-white mb-3">
-                        Электронный журнал посещаемости
+                        {t('login.title')}
                     </h1>
                     <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
-                        Быстрый и удобный учет присутствия студентов на занятиях с разграничением прав доступа.
+                        {t('login.description')}
                     </p>
 
                     {/* Фичи системы */}
                     <div className="flex items-center gap-6 mt-8 text-xs text-slate-400">
                         <div className="flex items-center gap-1.5">
                             <ShieldCheck className="w-4 h-4 text-[#0F4C9C]" />
-                            <span>Безопасный доступ</span>
+                            <span>{t('login.access')}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <Zap className="w-4 h-4 text-[#8C1D35]" />
-                            <span>Мгновенный отклик</span>
+                            <span>{t('login.response')}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Футер слева */}
                 <div className="relative z-10 text-xs text-slate-600">
-                    © 2026 Digital Gradebook. Все права защищены.
+                    © 2026 Digital Gradebook. {t('login.rights')}.
                 </div>
             </div>
 
@@ -118,16 +121,15 @@ const Login = () => {
                             alt="Logo"
                             className="h-14 w-auto object-contain mb-3 drop-shadow-[0_0_12px_rgba(15,76,156,0.3)]"
                         />
-                        <h2 className="text-xl font-bold text-white">Digital Gradebook</h2>
                     </div>
 
                     {/* Заголовок формы */}
                     <div className="text-center mb-6">
                         <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                            Вход в систему
+                            {t('login.signIn')}
                         </h2>
                         <p className="text-xs sm:text-sm text-slate-400 mt-2">
-                            Пожалуйста, введите ваш логин или email и пароль
+                            {t('login.secondary')}
                         </p>
                     </div>
 
@@ -144,7 +146,7 @@ const Login = () => {
                         {/* Поле Логин/Email */}
                         <div>
                             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                                Логин или Email
+                                {t('login.loginOrEmail')}
                             </label>
                             <div className="relative">
                                 <User className="w-5 h-5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -153,7 +155,7 @@ const Login = () => {
                                     value={loginInput}
                                     onChange={(e) => setLoginInput(e.target.value)}
                                     required
-                                    placeholder="Username или name@school.com"
+                                    placeholder={t('login.loginOrEmail')}
                                     className="w-full bg-slate-900/90 border border-slate-800 text-slate-100 placeholder-slate-600 pl-12 pr-4 py-3.5 rounded-2xl focus:outline-none focus:border-[#0F4C9C] focus:ring-1 focus:ring-[#0F4C9C] transition text-sm shadow-inner"
                                 />
                             </div>
@@ -162,7 +164,7 @@ const Login = () => {
                         {/* Поле Пароль */}
                         <div>
                             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                                Пароль
+                                {t('login.password')}
                             </label>
                             <div className="relative">
                                 <Lock className="w-5 h-5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -184,11 +186,11 @@ const Login = () => {
                             className="w-full mt-4 bg-[#0F4C9C] hover:bg-[#0B3B7A] active:bg-[#082A57] text-white font-semibold py-4 rounded-2xl transition-all duration-200 shadow-lg shadow-[#0F4C9C]/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
                         >
                             {loading ? (
-                                <span className="text-sm">Авторизация...</span>
+                                <span className="text-sm">{t('login.authorization')}</span>
                             ) : (
                                 <>
                                     <LogIn className="w-5 h-5" />
-                                    <span>Войти в аккаунт</span>
+                                    <span>{t('login.signIn')}</span>
                                 </>
                             )}
                         </button>

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api/axiosInstance';
 import { useAuth } from '../context/useAuth';
+import { useTranslation } from 'react-i18next';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 const attendanceOrder = ['present', 'late', 'absent'];
 const attendanceLabels = {
@@ -29,6 +31,8 @@ const statusFor = (attendance, studentId, lesson) => {
 };
 
 const AttendanceJournal = () => {
+    const { t } = useTranslation();
+
     const { groupId } = useParams();
     const { user } = useAuth();
     const [students, setStudents] = useState([]);
@@ -66,7 +70,7 @@ const AttendanceJournal = () => {
                 setAttendance(nextAttendance);
                 setSelectedMonth(monthList.length > 0 ? monthList[monthList.length - 1] : '');
             } catch (err) {
-                if (!cancelled) setError(err.response?.data?.message || 'Не удалось загрузить журнал');
+                if (!cancelled) setError(err.response?.data?.message || t('journal.cancelled'));
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -74,7 +78,7 @@ const AttendanceJournal = () => {
 
         fetchJournalData();
         return () => { cancelled = true; };
-    }, [groupId]);
+    }, [groupId, t]);
 
     const availableMonths = useMemo(() => {
         const months = [...new Set(lessons.map((lesson) => lesson.date.slice(0, 7)))];
@@ -113,22 +117,44 @@ const AttendanceJournal = () => {
             });
         } catch (err) {
             setAttendance((current) => ({ ...current, [key]: currentStatus }));
-            setError(err.response?.data?.message || 'Не удалось сохранить отметку');
+            setError(err.response?.data?.message || t("journal.Can'tSave"));
         }
     };
 
-    if (loading) return <div className="p-8 text-slate-400">Загрузка журнала...</div>;
-    if (error && students.length === 0) return <div className="p-8 text-rose-300">{error}</div>;
+    if (loading) {
+        return (
+            <div className="min-h-[100vh] bg-slate-950 flex items-center justify-center p-4">
+                    <Loader2 className="w-7 h-7 text-[#0F4C9C] animate-spin mr-2" />
+                    <span className="text-slate-300 font-medium text-sm sm:text-base tracking-wide">
+                        {t('journal.loading')}
+                    </span>
+            </div>
+        );
+    }
+
+    if (error && students.length === 0) {
+        return (
+            <div className="min-h-[80vh] bg-slate-950 flex items-center justify-center p-4">
+                <div className="flex flex-col items-center text-center max-w-md bg-rose-950/20 border border-rose-900/50 backdrop-blur-md px-6 py-6 rounded-2xl shadow-xl shadow-black/50">
+                    <AlertCircle className="w-10 h-10 text-rose-400 mb-2 shrink-0" />
+                    <h3 className="text-base font-semibold text-rose-200 mb-1">{t('journal.error')}</h3>
+                    <p className="text-xs sm:text-sm text-rose-300/80 leading-relaxed">
+                        {error}
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
-                    <h1 className="text-xl sm:text-2xl font-bold">Журнал посещаемости</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold">{t('journal.title')}</h1>
                     <div className="flex items-center gap-3">
                         {availableMonths.length > 0 && (
                             <label className="flex items-center gap-2 text-xs text-slate-300">
-                                <span>Месяц:</span>
+                                <span>{t('journal.month')}:</span>
                                 <select
                                     value={selectedMonth}
                                     onChange={(e) => setSelectedMonth(e.target.value)}
