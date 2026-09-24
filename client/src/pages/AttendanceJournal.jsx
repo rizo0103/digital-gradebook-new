@@ -212,7 +212,7 @@ const AttendanceJournal = () => {
                                                         className={`w-9 h-9 rounded-lg text-xs font-bold ${statusColor} ${canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
                                                         title={`${statusLabel} · ${lesson.subject || t('journal.lesson')}`}
                                                     >
-                                                        {attendanceShort[status] || 'Н'}
+                                                        {t(`journal.${attendanceShort[status]}`) || 'Н'}
                                                     </button>
                                                 </td>
                                             );

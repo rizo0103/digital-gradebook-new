@@ -44,9 +44,9 @@
         "lessons": "Lessons",
         "student": "Student",
         "noLessons": "There are no scheduled lessons for the selected month.",
-        "present": "Present",
-        "late": "Late",
-        "absent": "Absent",
+        "Б": "P",
+        "О": "L",
+        "Н": "A",
         "lesson": "Lesson",
         "loadingGroups": "Error loading groups",
         "saveError": "Could not save the status"
