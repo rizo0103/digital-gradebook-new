@@ -28,7 +28,7 @@ const Login = () => {
             login(response.data.user, response.data.token);
             navigate('/groups');
         } catch (err) {
-            setError(err.response?.data?.message || 'Неверный логин или пароль');
+            setError(err.response?.data?.message || t('login.invalidCredentials'));
         } finally {
             setLoading(false);
         }
@@ -103,7 +103,7 @@ const Login = () => {
 
                 {/* Футер слева */}
                 <div className="relative z-10 text-xs text-slate-600">
-                    © 2026 Digital Gradebook. {t('login.rights')}.
+                    {t('login.footer')} {t('login.rights')}.
                 </div>
             </div>
 

@@ -1,11 +1,13 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { updateGroup, deleteGroup } from '../../api/adminService';
 import { Users, Edit, Trash2, Check, X } from 'lucide-react';
 
 const fieldClass = "w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500";
 
 const GroupsList = ({ groups, teachers = [], onRefresh }) => {
+    const { t } = useTranslation();
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({});
 
@@ -27,34 +29,34 @@ const GroupsList = ({ groups, teachers = [], onRefresh }) => {
             setEditingId(null);
             onRefresh();
         } catch (err) {
-            alert('Ошибка при сохранении группы');
+            alert(t('admin.groupsList.saveError'));
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Удалить эту группу?')) return;
+        if (!window.confirm(t('admin.groupsList.deleteConfirm'))) return;
         try {
             await deleteGroup(id);
             onRefresh();
         } catch (err) {
-            alert('Ошибка при удалении группы');
+            alert(t('admin.groupsList.deleteError'));
         }
     };
 
     return (
         <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6">
             <h3 className="text-base font-bold text-white flex items-center gap-2 mb-6">
-                <Users className="w-4 h-4 text-blue-500" /> Управление группами ({groups.length})
+                <Users className="w-4 h-4 text-blue-500" /> {t('admin.groupsList.title', { count: groups.length })}
             </h3>
 
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-300">
                     <thead className="bg-slate-950 text-slate-400 uppercase font-medium border-b border-slate-800">
                         <tr>
-                            <th className="p-3">Название</th>
-                            <th className="p-3">Категория</th>
-                            <th className="p-3">Преподаватели</th>
-                            <th className="p-3 text-right">Действия</th>
+                            <th className="p-3">{t('admin.groupsList.name')}</th>
+                            <th className="p-3">{t('admin.groupsList.category')}</th>
+                            <th className="p-3">{t('admin.groupsList.teachers')}</th>
+                            <th className="p-3 text-right">{t('admin.groupsList.actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60">
@@ -78,9 +80,9 @@ const GroupsList = ({ groups, teachers = [], onRefresh }) => {
                                             onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                                             className={fieldClass}
                                         >
-                                            <option value="language">Курсы Языков</option>
-                                            <option value="topik">Подготовка к TOPIK</option>
-                                            <option value="other">Сторонний Предмет</option>
+                                            <option value="language">{t('admin.groupsTab.categoryOptions.language')}</option>
+                                            <option value="topik">{t('admin.groupsTab.categoryOptions.topik')}</option>
+                                            <option value="other">{t('admin.groupsTab.categoryOptions.other')}</option>
                                         </select>
                                     ) : (
                                         <span className="capitalize">{g.category}</span>
@@ -98,7 +100,7 @@ const GroupsList = ({ groups, teachers = [], onRefresh }) => {
                                             className={`${fieldClass} min-h-[90px]`}
                                         >
                                             {teachers.length === 0 ? (
-                                                <option value="">Нет преподавателей</option>
+                                                <option value="">{t('admin.groupsList.noTeachers')}</option>
                                             ) : (
                                                 teachers.map((teacher) => (
                                                     <option key={teacher.id} value={teacher.id}>
@@ -110,8 +112,8 @@ const GroupsList = ({ groups, teachers = [], onRefresh }) => {
                                     ) : (
                                         <span className="text-slate-400">
                                             {Array.isArray(g.teacherIds) && g.teacherIds.length > 0
-                                                ? g.teacherIds.length
-                                                : '0'} преподавателей
+                                                ? t('admin.groupsList.teachersCount', { count: g.teacherIds.length })
+                                                : t('admin.groupsList.noTeachers')}
                                         </span>
                                     )}
                                 </td>

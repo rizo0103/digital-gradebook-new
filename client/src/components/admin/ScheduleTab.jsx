@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../api/axiosInstance';
 import CustomDropdown from '../ui/CustomDropdown';
 import { Calendar } from 'lucide-react';
@@ -17,6 +18,7 @@ const daysOptions = [
 ];
 
 const ScheduleTab = ({ groups, teachers }) => {
+    const { t } = useTranslation();
     const [scheduleForm, setScheduleForm] = useState({
         groupId: '',
         subject: '',
@@ -43,36 +45,36 @@ const ScheduleTab = ({ groups, teachers }) => {
         e.preventDefault();
         try {
             await api.post('/admin/schedule', scheduleForm);
-            alert('Расписание и даты занятий успешно сгенерированы!');
+            alert(t('admin.scheduleTab.success'));
             setScheduleForm({
                 groupId: '', subject: '', startDate: '', endDate: '',
                 daysOfWeek: [], time: '14:00', teacherId: ''
             });
         } catch (err) {
-            alert('Ошибка при добавлении расписания');
+            alert(t('admin.scheduleTab.error'));
         }
     };
 
     return (
         <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 sm:p-8 max-w-xl">
             <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-500" /> Генерация расписания семестра
+                <Calendar className="w-5 h-5 text-blue-500" /> {t('admin.scheduleTab.title')}
             </h2>
 
             <form onSubmit={handleCreateSchedule} className="space-y-4">
                 <div>
-                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Выберите Группу</label>
+                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">{t('admin.scheduleTab.group')}</label>
                     <CustomDropdown
                         options={groups.map((g) => ({ value: g.id, label: `${g.name} (${g.category})` }))}
                         value={scheduleForm.groupId}
                         onChange={(val) => setScheduleForm({ ...scheduleForm, groupId: val })}
-                        placeholder="-- Выберите группу --"
+                        placeholder={t('admin.scheduleTab.groupPlaceholder')}
                     />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Дата начала</label>
+                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">{t('admin.scheduleTab.startDate')}</label>
                         <input
                             type="date"
                             required
@@ -82,7 +84,7 @@ const ScheduleTab = ({ groups, teachers }) => {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Дата окончания</label>
+                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">{t('admin.scheduleTab.endDate')}</label>
                         <input
                             type="date"
                             required
@@ -94,7 +96,7 @@ const ScheduleTab = ({ groups, teachers }) => {
                 </div>
 
                 <div>
-                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Дни занятий</label>
+                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">{t('admin.scheduleTab.days')}</label>
                     <div className="flex flex-wrap gap-2">
                         {daysOptions.map((day) => {
                             const isSelected = scheduleForm.daysOfWeek.includes(day.value);
@@ -118,26 +120,26 @@ const ScheduleTab = ({ groups, teachers }) => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Предмет</label>
+                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">{t('admin.scheduleTab.subject')}</label>
                         <input
                             type="text"
-                            placeholder="Напр. Корейский язык"
+                            placeholder={t('admin.scheduleTab.subjectPlaceholder')}
                             value={scheduleForm.subject}
                             onChange={(e) => setScheduleForm({ ...scheduleForm, subject: e.target.value })}
                             className={fieldInputClass}
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Преподаватель</label>
+                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">{t('admin.scheduleTab.teacher')}</label>
                         <CustomDropdown
                             options={teachers.map((teacher) => ({ value: teacher.id, label: teacher.fullName }))}
                             value={scheduleForm.teacherId}
                             onChange={(val) => setScheduleForm({ ...scheduleForm, teacherId: val })}
-                            placeholder="-- Выберите преподавателя --"
+                            placeholder={t('admin.scheduleTab.teacherPlaceholder')}
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Время</label>
+                        <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">{t('admin.scheduleTab.time')}</label>
                         <input
                             type="time"
                             value={scheduleForm.time}
@@ -151,7 +153,7 @@ const ScheduleTab = ({ groups, teachers }) => {
                     type="submit"
                     className="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-3 rounded-xl transition cursor-pointer mt-2"
                 >
-                    Сгенерировать расписание
+                    {t('admin.scheduleTab.generate')}
                 </button>
             </form>
         </div>

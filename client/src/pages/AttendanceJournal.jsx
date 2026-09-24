@@ -7,9 +7,9 @@ import { Loader2, AlertCircle } from 'lucide-react';
 
 const attendanceOrder = ['present', 'late', 'absent'];
 const attendanceLabels = {
-    present: 'Был',
-    late: 'Опоздал',
-    absent: 'Не был'
+    present: 'present',
+    late: 'late',
+    absent: 'absent'
 };
 const attendanceShort = {
     present: 'Б',
@@ -117,7 +117,7 @@ const AttendanceJournal = () => {
             });
         } catch (err) {
             setAttendance((current) => ({ ...current, [key]: currentStatus }));
-            setError(err.response?.data?.message || t("journal.Can'tSave"));
+            setError(err.response?.data?.message || t('journal.cantSave'));
         }
     };
 
@@ -168,21 +168,21 @@ const AttendanceJournal = () => {
                                 </select>
                             </label>
                         )}
-                        <span className="text-xs text-slate-400">Занятий: {lessonCount}</span>
+                        <span className="text-xs text-slate-400">{t('journal.lessons')}: {lessonCount}</span>
                     </div>
                 </div>
                 {error && <div className="mb-4 p-3 rounded-xl border border-rose-800 bg-rose-950/40 text-rose-300 text-sm">{error}</div>}
 
                 {filteredLessons.length === 0 ? (
                     <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-slate-400">
-                        Для выбранного месяца нет занятий по расписанию.
+                        {t('journal.noLessons')}
                     </div>
                 ) : (
                     <div className="overflow-x-auto rounded-2xl border border-slate-800">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-900 border-b border-slate-800 text-xs text-slate-400">
-                                    <th className="p-3 sticky left-0 bg-slate-900">Студент</th>
+                                    <th className="p-3 sticky left-0 bg-slate-900">{t('journal.student')}</th>
                                     {filteredLessons.map((lesson) => (
                                         <th key={lesson.id || `${lesson.date}-${lesson.subject}`} className="p-3 text-center min-w-[82px]">
                                             <div className="font-medium text-slate-300">{new Date(`${lesson.date}T00:00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'numeric' })}</div>
@@ -202,6 +202,7 @@ const AttendanceJournal = () => {
                                         {filteredLessons.map((lesson) => {
                                             const status = statusFor(attendance, student.id, lesson);
                                             const statusColor = status === 'present' ? 'bg-emerald-600 text-white' : status === 'late' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300';
+                                            const statusLabel = t(`journal.${attendanceLabels[status] || 'absent'}`);
                                             return (
                                                 <td key={`${student.id}-${lesson.id || lesson.date}-${lesson.subject || ''}`} className="p-3 text-center">
                                                     <button
@@ -209,7 +210,7 @@ const AttendanceJournal = () => {
                                                         disabled={!canEdit}
                                                         onClick={() => toggleAttendance(student.id, lesson)}
                                                         className={`w-9 h-9 rounded-lg text-xs font-bold ${statusColor} ${canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
-                                                        title={`${attendanceLabels[status] || attendanceLabels.absent} · ${lesson.subject || 'Урок'}`}
+                                                        title={`${statusLabel} · ${lesson.subject || t('journal.lesson')}`}
                                                     >
                                                         {attendanceShort[status] || 'Н'}
                                                     </button>

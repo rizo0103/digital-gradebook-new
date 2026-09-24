@@ -1,11 +1,13 @@
 ﻿/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../api/axiosInstance';
 import { Search, Edit, Trash2, Check, X, Users, Shield, GraduationCap, School } from 'lucide-react';
 
 const fieldClass = "w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors";
 
 const UsersList = ({ groups = [] }) => {
+    const { t } = useTranslation();
     const [users, setUsers] = useState([]);
     const [search, setSearch] = useState('');
     const [selectedRole, setSelectedRole] = useState('all');
@@ -64,7 +66,7 @@ const UsersList = ({ groups = [] }) => {
             user?.last_name_en,
         ].filter(Boolean).join(' ').trim();
 
-        return fullName || multilingualName || '—';
+        return fullName || multilingualName || t('admin.usersList.emptyGroup');
     };
 
     const handleEdit = (user) => {
@@ -110,17 +112,17 @@ const UsersList = ({ groups = [] }) => {
             setEditingId(null);
             await fetchUsers();
         } catch (err) {
-            alert('Ошибка при сохранении данных пользователя');
+            alert(t('admin.usersList.saveError'));
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Вы уверены, что хотите удалить этого пользователя?')) return;
+        if (!window.confirm(t('admin.usersList.deleteConfirm'))) return;
         try {
             await api.delete(`/admin/users/${id}`);
             await fetchUsers();
         } catch (err) {
-            alert('Ошибка при удалении пользователя');
+            alert(t('admin.usersList.deleteError'));
         }
     };
 
@@ -129,19 +131,19 @@ const UsersList = ({ groups = [] }) => {
             case 'admin':
                 return (
                     <span className="inline-flex items-center gap-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-md font-medium text-[11px]">
-                        <Shield className="w-3 h-3" /> Админ
+                        <Shield className="w-3 h-3" /> {t('admin.usersList.admin')}
                     </span>
                 );
             case 'teacher':
                 return (
                     <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-medium text-[11px]">
-                        <School className="w-3 h-3" /> Учитель
+                        <School className="w-3 h-3" /> {t('admin.usersList.teacher')}
                     </span>
                 );
             default:
                 return (
                     <span className="inline-flex items-center gap-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-md font-medium text-[11px]">
-                        <GraduationCap className="w-3 h-3" /> Студент
+                        <GraduationCap className="w-3 h-3" /> {t('admin.usersList.student')}
                     </span>
                 );
         }
@@ -171,14 +173,14 @@ const UsersList = ({ groups = [] }) => {
             <div className="flex flex-col gap-4 mb-6">
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                     <h3 className="text-base font-bold text-white flex items-center gap-2">
-                        <Users className="w-4 h-4 text-blue-500" /> Список пользователей ({filteredUsers.length})
+                        <Users className="w-4 h-4 text-blue-500" /> {t('admin.usersList.title', { count: filteredUsers.length })}
                     </h3>
 
                     <div className="relative w-full sm:w-64">
                         <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
                         <input
                             type="text"
-                            placeholder="Поиск по имени, email или ID..."
+                            placeholder={t('admin.usersList.search')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
@@ -188,10 +190,10 @@ const UsersList = ({ groups = [] }) => {
 
                 <div className="flex items-center gap-2 overflow-x-auto pb-1">
                     {[
-                        { id: 'all', label: 'Все' },
-                        { id: 'student', label: 'Студенты' },
-                        { id: 'teacher', label: 'Учителя' },
-                        { id: 'admin', label: 'Администраторы' }
+                        { id: 'all', label: t('admin.usersList.all') },
+                        { id: 'student', label: t('admin.usersList.students') },
+                        { id: 'teacher', label: t('admin.usersList.teachers') },
+                        { id: 'admin', label: t('admin.usersList.admins') }
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -212,20 +214,20 @@ const UsersList = ({ groups = [] }) => {
                 <table className="w-full text-left text-xs text-slate-300">
                     <thead className="bg-slate-950 text-slate-400 uppercase font-medium border-b border-slate-800">
                         <tr>
-                            <th className="p-3">ID</th>
-                            <th className="p-3">Роль</th>
-                            <th className="p-3">Имя / Full Name</th>
-                            <th className="p-3">Логин / Email</th>
-                            <th className="p-3">Группа</th>
-                            <th className="p-3">Телефон</th>
-                            <th className="p-3 text-right">Действия</th>
+                            <th className="p-3">{t('admin.usersList.id')}</th>
+                            <th className="p-3">{t('admin.usersList.role')}</th>
+                            <th className="p-3">{t('admin.usersList.name')}</th>
+                            <th className="p-3">{t('admin.usersList.loginEmail')}</th>
+                            <th className="p-3">{t('admin.usersList.group')}</th>
+                            <th className="p-3">{t('admin.usersList.phone')}</th>
+                            <th className="p-3 text-right">{t('admin.usersList.actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60">
                         {filteredUsers.length === 0 ? (
                             <tr>
                                 <td colSpan="7" className="p-6 text-center text-slate-500">
-                                    Пользователи не найдены
+                                    {t('admin.usersList.notFound')}
                                 </td>
                             </tr>
                         ) : (
@@ -244,9 +246,9 @@ const UsersList = ({ groups = [] }) => {
                                                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                                                     className={fieldClass}
                                                 >
-                                                    <option value="student">Студент</option>
-                                                    <option value="teacher">Учитель</option>
-                                                    <option value="admin">Админ</option>
+                                                    <option value="student">{t('admin.usersList.student')}</option>
+                                                    <option value="teacher">{t('admin.usersList.teacher')}</option>
+                                                    <option value="admin">{t('admin.usersList.admin')}</option>
                                                 </select>
                                             ) : (
                                                 renderRoleBadge(u.role)
@@ -273,7 +275,7 @@ const UsersList = ({ groups = [] }) => {
                                                     className={fieldClass}
                                                 />
                                             ) : (
-                                                <span className="text-slate-400">{u.username || u.email || '—'}</span>
+                                                <span className="text-slate-400">{u.username || u.email || t('admin.usersList.emptyGroup')}</span>
                                             )}
                                         </td>
 
@@ -305,7 +307,7 @@ const UsersList = ({ groups = [] }) => {
                                                                     </span>
                                                                 );
                                                             })
-                                                            : <span className="text-slate-500">—</span>;
+                                                            : <span className="text-slate-500">{t('admin.usersList.emptyGroup')}</span>;
                                                     })()}
                                                 </div>
                                             )}
@@ -319,7 +321,7 @@ const UsersList = ({ groups = [] }) => {
                                                     className={fieldClass}
                                                 />
                                             ) : (
-                                                u.phone || '—'
+                                                u.phone || t('admin.usersList.emptyGroup')
                                             )}
                                         </td>
 

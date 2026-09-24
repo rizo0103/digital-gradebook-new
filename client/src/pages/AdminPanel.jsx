@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axiosInstance';
 import { Users, Calendar, UserPlus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import StudentsTab from '../components/admin/UsersTab';
 import GroupsTab from '../components/admin/GroupsTab';
@@ -10,6 +11,7 @@ import StudentsList from '../components/admin/UsersList';
 import GroupsList from '../components/admin/GroupsList';
 
 const AdminPanel = () => {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('students');
     const [groups, setGroups] = useState([]);
     const [teachers, setTeachers] = useState([]);
@@ -41,10 +43,10 @@ const AdminPanel = () => {
 
                 <div className="border-b border-slate-800/80 pb-5">
                     <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                        Панель Администратора
+                        {t('admin.title')}
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                        Управление пользователями, группами и генерацией дат расписания
+                        {t('admin.subtitle')}
                     </p>
                 </div>
 
@@ -56,7 +58,7 @@ const AdminPanel = () => {
                             activeTab === 'students' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
                         }`}
                     >
-                        <UserPlus className="w-4 h-4" /> Пользователи
+                        <UserPlus className="w-4 h-4" /> {t('admin.tabs.students')}
                     </button>
 
                     <button
@@ -65,7 +67,7 @@ const AdminPanel = () => {
                             activeTab === 'groups' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
                         }`}
                     >
-                        <Users className="w-4 h-4" /> Группы
+                        <Users className="w-4 h-4" /> {t('admin.tabs.groups')}
                     </button>
 
                     <button
@@ -74,7 +76,7 @@ const AdminPanel = () => {
                             activeTab === 'schedule' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
                         }`}
                     >
-                        <Calendar className="w-4 h-4" /> Расписание Уроков
+                        <Calendar className="w-4 h-4" /> {t('admin.tabs.schedule')}
                     </button>
                 </div>
 

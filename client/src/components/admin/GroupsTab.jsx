@@ -1,19 +1,21 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../api/axiosInstance';
 import CustomDropdown from '../ui/CustomDropdown';
 import { Users } from 'lucide-react';
 
 const fieldInputClass = "w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:bg-slate-900/50 transition-colors";
 
-const categoryOptions = [
-    { value: 'language', label: 'Курсы Языков' },
-    { value: 'topik', label: 'Подготовка к TOPIK' },
-    { value: 'other', label: 'Сторонний Предмет' }
-];
-
 const GroupsTab = ({ teachers, onGroupCreated }) => {
+    const { t } = useTranslation();
     const [groupForm, setGroupForm] = useState({ name: '', category: 'language', teacherIds: [] });
+
+    const categoryOptions = [
+        { value: 'language', label: t('admin.groupsTab.categoryOptions.language') },
+        { value: 'topik', label: t('admin.groupsTab.categoryOptions.topik') },
+        { value: 'other', label: t('admin.groupsTab.categoryOptions.other') }
+    ];
 
     const handleCreateGroup = async (e) => {
         e.preventDefault();
@@ -23,27 +25,27 @@ const GroupsTab = ({ teachers, onGroupCreated }) => {
                 studentIds: [],
                 teacherIds: Array.isArray(groupForm.teacherIds) ? groupForm.teacherIds : []
             });
-            alert('Группа успешно создана!');
+            alert(t('admin.groupsTab.success'));
             setGroupForm({ name: '', category: 'language', teacherIds: [] });
             if (onGroupCreated) onGroupCreated();
         } catch (err) {
-            alert('Ошибка при создании группы');
+            alert(t('admin.groupsTab.error'));
         }
     };
 
     return (
         <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 sm:p-8 max-w-xl">
             <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-500" /> Добавление новой группы
+                <Users className="w-5 h-5 text-blue-500" /> {t('admin.groupsTab.title')}
             </h2>
 
             <form onSubmit={handleCreateGroup} className="space-y-4">
                 <div>
-                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Название группы</label>
+                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">{t('admin.groupsTab.name')}</label>
                     <input
                         type="text"
                         required
-                        placeholder="Например: 초급 2A-1"
+                        placeholder={t('admin.groupsTab.placeholderName')}
                         value={groupForm.name}
                         onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
                         className={fieldInputClass}
@@ -51,7 +53,7 @@ const GroupsTab = ({ teachers, onGroupCreated }) => {
                 </div>
 
                 <div>
-                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Категория группы</label>
+                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">{t('admin.groupsTab.category')}</label>
                     <CustomDropdown
                         options={categoryOptions}
                         value={groupForm.category}
@@ -60,7 +62,7 @@ const GroupsTab = ({ teachers, onGroupCreated }) => {
                 </div>
 
                 <div>
-                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">Преподаватели</label>
+                    <label className="block text-xs font-medium text-slate-400 uppercase mb-1.5">{t('admin.groupsTab.teachers')}</label>
                     <select
                         multiple
                         value={groupForm.teacherIds || []}
@@ -71,7 +73,7 @@ const GroupsTab = ({ teachers, onGroupCreated }) => {
                         className={`${fieldInputClass} min-h-[120px]`}
                     >
                         {teachers.length === 0 ? (
-                            <option value="">Нет доступных преподавателей</option>
+                            <option value="">{t('admin.groupsTab.noTeachers')}</option>
                         ) : (
                             teachers.map((teacher) => (
                                 <option key={teacher.id} value={teacher.id}>
@@ -86,7 +88,7 @@ const GroupsTab = ({ teachers, onGroupCreated }) => {
                     type="submit"
                     className="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-3 rounded-xl transition cursor-pointer mt-2"
                 >
-                    Создать группу
+                    {t('admin.groupsTab.create')}
                 </button>
             </form>
         </div>

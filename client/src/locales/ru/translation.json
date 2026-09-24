@@ -1,15 +1,17 @@
 {
     "navbar": {
         "adminPanel": "Админка",
-        "signOut": "Выйти" 
+        "signOut": "Выйти",
+        "language": "Язык",
+        "digitalGradebook": "Digital Gradebook"
     },
 
     "login": {
         "absent": "Н/Б",
         "present": "БЫЛ",
         "title": "Электронный журнал посещаемости",
-        "description": "Быстрый и удобный учёт присутсвия студентов на \n занятиях с разграничением прав доступа",
-        "access": "Безрпасный доступ",
+        "description": "Быстрый и удобный учёт присутствия студентов на занятиях с разграничением прав доступа",
+        "access": "Безопасный доступ",
         "response": "Мгновенный отклик",
         "signIn": "Вход в систему",
         "secondary": "Пожалуйста, введите ваш логин или email и пароль",
@@ -17,7 +19,9 @@
         "password": "Пароль",
         "button": "Войти в аккаунт",
         "authorization": "Авторизация...",
-        "rights": "Все права защищены"
+        "rights": "Все права защищены",
+        "invalidCredentials": "Неверный логин или пароль",
+        "footer": "© 2026 Digital Gradebook."
     },
 
     "groups": {
@@ -32,10 +36,140 @@
 
     "journal": {
         "cancelled": "Не удалось загрузить журнал",
-        "can'tSave": "Не удалось обновить статус",
+        "cantSave": "Не удалось обновить статус",
         "loading": "Загрузка журнала...",
         "error": "Произошла ошибка",
         "title": "Журнал посещаемости",
-        "month": "Месяц"
+        "month": "Месяц",
+        "lessons": "Занятий",
+        "student": "Студент",
+        "noLessons": "Для выбранного месяца нет занятий по расписанию.",
+        "present": "Был",
+        "late": "Опоздал",
+        "absent": "Не был",
+        "lesson": "Урок",
+        "loadingGroups": "Ошибка загрузки групп",
+        "saveError": "Не удалось сохранить статус"
+    },
+
+    "admin": {
+        "title": "Панель Администратора",
+        "subtitle": "Управление пользователями, группами и генерацией дат расписания",
+        "tabs": {
+            "students": "Пользователи",
+            "groups": "Группы",
+            "schedule": "Расписание Уроков"
+        },
+        "usersTab": {
+            "title": "Создать пользователя",
+            "subtitle": "Выберите роль пользователя и заполните необходимые данные",
+            "student": "Студент",
+            "teacher": "Учитель",
+            "admin": "Админ",
+            "manual": "Вручную",
+            "jsonImport": "Импорт JSON",
+            "username": "Username (Логин)",
+            "fullName": "ФИО (Full Name)",
+            "email": "Email",
+            "password": "Пароль",
+            "createUser": "Создать {{role}}",
+            "createStudent": "Создать студента",
+            "idNumber": "ID (Число)",
+            "groupStudy": "Группа обучения",
+            "lessonTime": "Время урока",
+            "nameTj": "Имя (TJ)",
+            "lastNameTj": "Фамилия (TJ)",
+            "nameEn": "Имя (EN)",
+            "lastNameEn": "Фамилия (EN)",
+            "nameKr": "Имя (KR)",
+            "lastNameKr": "Фамилия (KR)",
+            "dateOfBirth": "Дата рождения",
+            "gender": "Пол",
+            "nationality": "Национальность",
+            "address": "Адрес",
+            "phone": "Телефон",
+            "uploadJson": "Загрузите .json файл со структурой данных студентов или вставьте его текстом.",
+            "importDatabase": "Импортировать в базу",
+            "placeholderJson": "Или вставьте массив JSON объектов...",
+            "loadingCreateUser": "Создание пользователя ({{role}})...",
+            "loadingCreateStudent": "Создание студента...",
+            "loadingImportStudents": "Импортируем студентов...",
+            "createdUserSuccess": "{{role}} \"{{name}}\" успешно создан!",
+            "createdStudentSuccess": "Студент {{name}} успешно добавлен!",
+            "importedStudentsSuccess": "Студенты ({{count}}) успешно импортированы!",
+            "studentCredentialsAlert": "Данные нового студента:\n\n{{credentials}}",
+            "invalidJson": "Некорректный формат JSON",
+            "userCreateError": "Ошибка при создании пользователя",
+            "studentCreateError": "Ошибка при создании студента",
+            "importStudentsError": "Ошибка при импорте студентов",
+            "chooseGroup": "-- Выберите группу --"
+        },
+        "usersList": {
+            "title": "Список пользователей ({{count}})",
+            "search": "Поиск по имени, email или ID...",
+            "all": "Все",
+            "students": "Студенты",
+            "teachers": "Учителя",
+            "admins": "Администраторы",
+            "notFound": "Пользователи не найдены",
+            "id": "ID",
+            "role": "Роль",
+            "name": "Имя / Full Name",
+            "loginEmail": "Логин / Email",
+            "group": "Группа",
+            "phone": "Телефон",
+            "actions": "Действия",
+            "admin": "Админ",
+            "teacher": "Учитель",
+            "student": "Студент",
+            "emptyGroup": "—",
+            "saveError": "Ошибка при сохранении данных пользователя",
+            "deleteConfirm": "Вы уверены, что хотите удалить этого пользователя?",
+            "deleteError": "Ошибка при удалении пользователя"
+        },
+        "groupsTab": {
+            "title": "Добавление новой группы",
+            "name": "Название группы",
+            "placeholderName": "Например: 초급 2A-1",
+            "category": "Категория группы",
+            "teachers": "Преподаватели",
+            "noTeachers": "Нет доступных преподавателей",
+            "create": "Создать группу",
+            "success": "Группа успешно создана!",
+            "error": "Ошибка при создании группы",
+            "categoryOptions": {
+                "language": "Курсы Языков",
+                "topik": "Подготовка к TOPIK",
+                "other": "Сторонний Предмет"
+            }
+        },
+        "groupsList": {
+            "title": "Управление группами ({{count}})",
+            "name": "Название",
+            "category": "Категория",
+            "teachers": "Преподаватели",
+            "actions": "Действия",
+            "teachersCount": "{{count}} преподавателей",
+            "noTeachers": "Нет преподавателей",
+            "saveError": "Ошибка при сохранении группы",
+            "deleteConfirm": "Удалить эту группу?",
+            "deleteError": "Ошибка при удалении группы"
+        },
+        "scheduleTab": {
+            "title": "Генерация расписания семестра",
+            "group": "Выберите Группу",
+            "groupPlaceholder": "-- Выберите группу --",
+            "startDate": "Дата начала",
+            "endDate": "Дата окончания",
+            "days": "Дни занятий",
+            "subject": "Предмет",
+            "subjectPlaceholder": "Напр. Корейский язык",
+            "teacher": "Преподаватель",
+            "teacherPlaceholder": "-- Выберите преподавателя --",
+            "time": "Время",
+            "generate": "Сгенерировать расписание",
+            "success": "Расписание и даты занятий успешно сгенерированы!",
+            "error": "Ошибка при добавлении расписания"
+        }
     }
 }

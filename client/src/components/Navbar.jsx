@@ -23,6 +23,8 @@ const Navbar = () => {
         { value: 'kr', label: 'Kr' },
     ];
 
+    const currentLanguageLabel = i18n.language ? i18n.language.slice(0, 2).toUpperCase() : 'RU';
+
     const handleLanguageChange = (lng) => {
         i18n.changeLanguage(lng);
     };
@@ -41,7 +43,7 @@ const Navbar = () => {
                     className="h-7 sm:h-8 w-auto object-contain transition-transform group-hover:scale-105"
                 />
                 <span className="text-white font-bold text-base sm:text-lg tracking-tight group-hover:text-slate-200 transition hidden xs:inline-block">
-                    Digital Gradebook
+                    {t('navbar.digitalGradebook')}
                 </span>
             </div>
 
@@ -97,7 +99,7 @@ const Navbar = () => {
                         options={languageOptions}
                         value={i18n.language ? i18n.language.slice(0, 2) : 'ru'}
                         onChange={handleLanguageChange}
-                        placeholder="Язык"
+                        placeholder={t('navbar.language')}
                         buttonClassName="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium"
                     />
                 </div>

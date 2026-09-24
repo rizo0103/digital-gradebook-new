@@ -1,14 +1,16 @@
 {
     "navbar": {
         "adminPanel": "Admin Panel",
-        "signOut": "Sign Out"
+        "signOut": "Sign Out",
+        "language": "Language",
+        "digitalGradebook": "Digital Gradebook"
     },
 
     "login": {
         "absent": "Absent",
         "present": "Present",
         "title": "Digital journal of attendance",
-        "description": "Quick and convenient student attendance tracking \n in lessons with separeted access rights",
+        "description": "Quick and convenient student attendance tracking in lessons with separated access rights",
         "access": "Secure access",
         "response": "Quick response",
         "signIn": "Sign In",
@@ -17,7 +19,9 @@
         "password": "Password",
         "button": "Sign In",
         "authorization": "Authorization...",
-        "rights": "All rights reserved"
+        "rights": "All rights reserved",
+        "invalidCredentials": "Invalid login or password",
+        "footer": "© 2026 Digital Gradebook."
     },
 
     "groups": {
@@ -32,10 +36,140 @@
 
     "journal": {
         "cancelled": "Can not load the journal",
-        "can'tSave": "Can not save the status",
+        "cantSave": "Can not save the status",
         "loading": "Loading journal...",
-        "error": "An error occured",
+        "error": "An error occurred",
         "title": "Attendance journal",
-        "month": "Month"
+        "month": "Month",
+        "lessons": "Lessons",
+        "student": "Student",
+        "noLessons": "There are no scheduled lessons for the selected month.",
+        "present": "Present",
+        "late": "Late",
+        "absent": "Absent",
+        "lesson": "Lesson",
+        "loadingGroups": "Error loading groups",
+        "saveError": "Could not save the status"
+    },
+
+    "admin": {
+        "title": "Admin Panel",
+        "subtitle": "Manage users, groups, and generate schedule dates",
+        "tabs": {
+            "students": "Users",
+            "groups": "Groups",
+            "schedule": "Lesson Schedule"
+        },
+        "usersTab": {
+            "title": "Create user",
+            "subtitle": "Choose a user role and fill in the required data",
+            "student": "Student",
+            "teacher": "Teacher",
+            "admin": "Admin",
+            "manual": "Manual",
+            "jsonImport": "Import JSON",
+            "username": "Username (Login)",
+            "fullName": "Full Name",
+            "email": "Email",
+            "password": "Password",
+            "createUser": "Create {{role}}",
+            "createStudent": "Create student",
+            "idNumber": "ID (Number)",
+            "groupStudy": "Study Group",
+            "lessonTime": "Lesson time",
+            "nameTj": "Name (TJ)",
+            "lastNameTj": "Last name (TJ)",
+            "nameEn": "Name (EN)",
+            "lastNameEn": "Last name (EN)",
+            "nameKr": "Name (KR)",
+            "lastNameKr": "Last name (KR)",
+            "dateOfBirth": "Date of birth",
+            "gender": "Gender",
+            "nationality": "Nationality",
+            "address": "Address",
+            "phone": "Phone",
+            "uploadJson": "Upload a .json file with student data or paste it here.",
+            "importDatabase": "Import to database",
+            "placeholderJson": "Or paste an array of JSON objects...",
+            "loadingCreateUser": "Creating user ({{role}})...",
+            "loadingCreateStudent": "Creating student...",
+            "loadingImportStudents": "Importing students...",
+            "createdUserSuccess": "{{role}} \"{{name}}\" created successfully!",
+            "createdStudentSuccess": "Student {{name}} added successfully!",
+            "importedStudentsSuccess": "Students ({{count}}) imported successfully!",
+            "studentCredentialsAlert": "New student details:\n\n{{credentials}}",
+            "invalidJson": "Invalid JSON format",
+            "userCreateError": "Error creating user",
+            "studentCreateError": "Error creating student",
+            "importStudentsError": "Error importing students",
+            "chooseGroup": "-- Choose a group --"
+        },
+        "usersList": {
+            "title": "Users list ({{count}})",
+            "search": "Search by name, email, or ID...",
+            "all": "All",
+            "students": "Students",
+            "teachers": "Teachers",
+            "admins": "Admins",
+            "notFound": "Users not found",
+            "id": "ID",
+            "role": "Role",
+            "name": "Name / Full Name",
+            "loginEmail": "Login / Email",
+            "group": "Group",
+            "phone": "Phone",
+            "actions": "Actions",
+            "admin": "Admin",
+            "teacher": "Teacher",
+            "student": "Student",
+            "emptyGroup": "—",
+            "saveError": "Error saving user data",
+            "deleteConfirm": "Are you sure you want to delete this user?",
+            "deleteError": "Error deleting user"
+        },
+        "groupsTab": {
+            "title": "Add new group",
+            "name": "Group name",
+            "placeholderName": "For example: 초급 2A-1",
+            "category": "Group category",
+            "teachers": "Teachers",
+            "noTeachers": "No available teachers",
+            "create": "Create group",
+            "success": "Group created successfully!",
+            "error": "Error creating group",
+            "categoryOptions": {
+                "language": "Language Courses",
+                "topik": "TOPIK Preparation",
+                "other": "External Subject"
+            }
+        },
+        "groupsList": {
+            "title": "Manage groups ({{count}})",
+            "name": "Name",
+            "category": "Category",
+            "teachers": "Teachers",
+            "actions": "Actions",
+            "teachersCount": "{{count}} teachers",
+            "noTeachers": "No teachers",
+            "saveError": "Error saving group",
+            "deleteConfirm": "Delete this group?",
+            "deleteError": "Error deleting group"
+        },
+        "scheduleTab": {
+            "title": "Generate semester schedule",
+            "group": "Select a group",
+            "groupPlaceholder": "-- Select a group --",
+            "startDate": "Start date",
+            "endDate": "End date",
+            "days": "Class days",
+            "subject": "Subject",
+            "subjectPlaceholder": "e.g. Korean language",
+            "teacher": "Teacher",
+            "teacherPlaceholder": "-- Select a teacher --",
+            "time": "Time",
+            "generate": "Generate schedule",
+            "success": "Schedule and lesson dates generated successfully!",
+            "error": "Error adding schedule"
+        }
     }
 }
