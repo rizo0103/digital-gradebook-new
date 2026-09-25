@@ -5,9 +5,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
+# Копируем исходный код и секретный ключ
 COPY src ./src
+COPY serviceAccountKey.json ./serviceAccountKey.json
 
-ENV NODE_ENV=production
 ENV PORT=8080
 
 EXPOSE 8080

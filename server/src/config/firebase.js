@@ -11,9 +11,13 @@ let app;
 if (getApps().length === 0) {
   if (fs.existsSync(keyPath)) {
     const serviceAccount = require(keyPath);
-    app = initializeApp({ credential: cert(serviceAccount) });
+    app = initializeApp({ credential: cert(serviceAccount), projectId: "digital-gradebook" });
   } else {
-    app = initializeApp();
+    app = initializeApp(
+      {
+        projectId: "digital-gradebook"
+      }
+    );
   }
 } else {
   // If already initialized, look up the existing default app

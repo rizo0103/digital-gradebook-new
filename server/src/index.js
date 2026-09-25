@@ -6,6 +6,7 @@ const authRoutes = require('./routes/authRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const studentRoutes = require('./routes/studentRoutes');
+const resources = require('./config/resources');
 
 const app = express();
 
@@ -13,11 +14,32 @@ if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET must be configured');
 }
 
-const allowedOrigins = process.env.CLIENT_ORIGIN
-    ? process.env.CLIENT_ORIGIN.split(',').map((origin) => origin.trim())
-    : ['http://localhost:5173'];
+// Получаем разрешенные домены и удаляем лишние слэши на конце
+const allowedOrigins = [
+        'https://digital-gradebook.vercel.app',
+        resources.urls?.frontend?.replace(/\/$/, '')
+      ];
 
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors({
+    origin: function (origin, callback) {
+        // Разрешаем запросы без origin (например, мобильные приложения, Postman, curl)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        } else {
+            console.error(`CORS blocked for origin: ${origin}`);
+            return callback(null, false);
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Явно обрабатываем preflight (OPTIONS) запросы
+app.options('*', cors());
+
 app.use(express.json({ limit: '256kb' }));
 
 app.use('/api/auth', authRoutes);
@@ -37,6 +59,6 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Сервер запущен на порту ${PORT}`);
 });

@@ -4,5 +4,8 @@ module.exports = {
         password: process.env.ADMIN_PASSWORD,
         name: process.env.ADMIN_NAME || 'Admin User',
         username: process.env.ADMIN_USERNAME || 'admin',
+    },
+    urls: {
+        frontend: process.env.FRONTEND_URL || "http://localhost:5173",
     }
 };
