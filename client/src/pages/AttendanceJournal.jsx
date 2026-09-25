@@ -4,6 +4,7 @@ import api from '../api/axiosInstance';
 import { useAuth } from '../context/useAuth';
 import { useTranslation } from 'react-i18next';
 import { Loader2, AlertCircle } from 'lucide-react';
+import CustomDropdown from '../components/ui/CustomDropdown';
 
 const attendanceOrder = ['present', 'late', 'absent'];
 const attendanceLabels = {
@@ -16,6 +17,20 @@ const attendanceShort = {
     late: 'О',
     absent: 'Н'
 };
+
+const getValidateLocale = (lang) => {
+    const localeMap = {
+        'kr': "ko-KR",
+        'ko': "ko-KR",
+        'ru': "ru-RU",
+        'en': "en-US",
+        'tj': "tg-TJ",
+        'tg': "tg-TJ",
+    };
+
+    return localeMap[lang?.toLowerCase()] || lang || 'ru-RU';
+};
+
 
 const normalizeAttendanceStatus = (status) => {
     const normalized = String(status || '').toLowerCase();
@@ -31,7 +46,8 @@ const statusFor = (attendance, studentId, lesson) => {
 };
 
 const AttendanceJournal = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const currentLang = useMemo(() => getValidateLocale(i18n.language), [i18n.language]);
 
     const { groupId } = useParams();
     const { user } = useAuth();
@@ -65,10 +81,22 @@ const AttendanceJournal = () => {
 
                 const sortedLessons = lessonsRes.data.sort((a, b) => a.date.localeCompare(b.date));
                 const monthList = [...new Set(sortedLessons.map((lesson) => lesson.date.slice(0, 7)))].sort();
+
                 setStudents(studentsRes.data);
                 setLessons(sortedLessons);
                 setAttendance(nextAttendance);
-                setSelectedMonth(monthList.length > 0 ? monthList[monthList.length - 1] : '');
+
+                // Определение текущего месяца в формате YYYY-MM
+                const today = new Date();
+                const nowMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+                if (monthList.includes(nowMonth)) {
+                    setSelectedMonth(nowMonth); // Выбираем текущий месяц, если в нём есть уроки
+                } else if (monthList.length > 0) {
+                    setSelectedMonth(monthList[monthList.length - 1]); // Иначе последний доступный
+                } else {
+                    setSelectedMonth('');
+                }
             } catch (err) {
                 if (!cancelled) setError(err.response?.data?.message || t('journal.cancelled'));
             } finally {
@@ -84,6 +112,20 @@ const AttendanceJournal = () => {
         const months = [...new Set(lessons.map((lesson) => lesson.date.slice(0, 7)))];
         return months.sort();
     }, [lessons]);
+
+    // Варианты для CustomDropdown с локализацией названий месяцев
+    const monthOptions = useMemo(() => {
+        return availableMonths.map((month) => {
+            const dateObj = new Date(`${month}-01T00:00:00`);
+            const label = dateObj.toLocaleDateString(currentLang, { month: 'long', year: 'numeric' });
+            // Делаем первую букву заглавной
+            const formattedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+            return {
+                value: month,
+                label: formattedLabel
+            };
+        });
+    }, [availableMonths, currentLang]);
 
     const filteredLessons = useMemo(() => {
         if (!selectedMonth) return lessons;
@@ -124,10 +166,10 @@ const AttendanceJournal = () => {
     if (loading) {
         return (
             <div className="min-h-[100vh] bg-slate-950 flex items-center justify-center p-4">
-                    <Loader2 className="w-7 h-7 text-[#0F4C9C] animate-spin mr-2" />
-                    <span className="text-slate-300 font-medium text-sm sm:text-base tracking-wide">
-                        {t('journal.loading')}
-                    </span>
+                <Loader2 className="w-7 h-7 text-[#0F4C9C] animate-spin mr-2" />
+                <span className="text-slate-300 font-medium text-sm sm:text-base tracking-wide">
+                    {t('journal.loading')}
+                </span>
             </div>
         );
     }
@@ -153,22 +195,18 @@ const AttendanceJournal = () => {
                     <h1 className="text-xl sm:text-2xl font-bold">{t('journal.title')}</h1>
                     <div className="flex items-center gap-3">
                         {availableMonths.length > 0 && (
-                            <label className="flex items-center gap-2 text-xs text-slate-300">
-                                <span>{t('journal.month')}:</span>
-                                <select
+                            <div className="flex items-center gap-2 text-xs text-slate-300 min-w-[180px] sm:min-w-[200px]">
+                                <span className="shrink-0">{t('journal.month')}:</span>
+                                <CustomDropdown
+                                    options={monthOptions}
                                     value={selectedMonth}
-                                    onChange={(e) => setSelectedMonth(e.target.value)}
-                                    className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
-                                >
-                                    {availableMonths.map((month) => (
-                                        <option key={month} value={month}>
-                                            {new Date(`${month}-01T00:00:00`).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
+                                    onChange={setSelectedMonth}
+                                    placeholder={t('journal.selectMonth') || "-- Месяц --"}
+                                    buttonClassName="px-3 py-1.5 text-xs sm:text-sm"
+                                />
+                            </div>
                         )}
-                        <span className="text-xs text-slate-400">{t('journal.lessons')}: {lessonCount}</span>
+                        <span className="text-xs text-slate-400 whitespace-nowrap">{t('journal.lessons')}: {lessonCount}</span>
                     </div>
                 </div>
                 {error && <div className="mb-4 p-3 rounded-xl border border-rose-800 bg-rose-950/40 text-rose-300 text-sm">{error}</div>}
@@ -185,9 +223,11 @@ const AttendanceJournal = () => {
                                     <th className="p-3 sticky left-0 bg-slate-900">{t('journal.student')}</th>
                                     {filteredLessons.map((lesson) => (
                                         <th key={lesson.id || `${lesson.date}-${lesson.subject}`} className="p-3 text-center min-w-[82px]">
-                                            <div className="font-medium text-slate-300">{new Date(`${lesson.date}T00:00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'numeric' })}</div>
+                                            <div className="font-medium text-slate-300">
+                                                {new Date(`${lesson.date}T00:00:00`).toLocaleDateString(currentLang, { day: 'numeric', month: 'numeric' })}
+                                            </div>
                                             <div className="text-[10px] uppercase text-slate-500 mt-1">
-                                                {new Date(`${lesson.date}T00:00:00`).toLocaleDateString('ru-RU', { weekday: 'short' })}
+                                                {new Date(`${lesson.date}T00:00:00`).toLocaleDateString(currentLang, { weekday: 'short' })}
                                             </div>
                                         </th>
                                     ))}
