@@ -47,9 +47,14 @@
         "Б": "P",
         "О": "L",
         "Н": "A",
+        "Был": "Present",
+        "Не был": "Absent",
+        "Опоздал":"Late",
         "lesson": "Lesson",
         "loadingGroups": "Error loading groups",
-        "saveError": "Could not save the status"
+        "saveError": "Could not save the status",
+        "totalAttendance": "Total attendance",
+        "attendedLesson": "Present in class"
     },
 
     "admin": {

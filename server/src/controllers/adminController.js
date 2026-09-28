@@ -362,12 +362,12 @@ exports.deleteStudent = async (req, res, next) => {
     }
 };
 
-// 5. Обновление пользователя (ИСПРАВЛЕНО: исключение ID из updateData)
+// 5. Обновление пользователя (с поддержкой смены пароля)
 exports.updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        // Извлекаем id и customId, чтобы не затирать системные поля
-        const { id: bodyId, customId, role, student_groups, teacher_groups, groupIds, ...updateData } = req.body;
+        // Извлекаем password из body, чтобы обработать его отдельно
+        const { id: bodyId, customId, role, student_groups, teacher_groups, groupIds, password, ...updateData } = req.body;
 
         const normalizedRole = typeof role === 'string' ? role : 'student';
         const nextGroupIds = normalizeArray(groupIds || (normalizedRole === 'teacher' ? teacher_groups : student_groups));
@@ -382,6 +382,11 @@ exports.updateUser = async (req, res) => {
         const currentRole = userSnapshot.data().role;
         const userUpdate = { ...updateData };
 
+        // Если передан новый пароль (строка не пустая и длиной хотя бы от 4-6 символов)
+        if (typeof password === 'string' && password.trim().length > 0) {
+            userUpdate.passwordHash = await bcrypt.hash(password.trim(), 10);
+        }
+
         if (normalizedRole === 'student') {
             userUpdate.student_groups = nextGroupIds;
             delete userUpdate.teacher_groups;
@@ -395,8 +400,12 @@ exports.updateUser = async (req, res) => {
         if (userUpdate.username) userUpdate.username = userUpdate.username.trim();
         if (userUpdate.email) userUpdate.email = userUpdate.email.trim();
         if (normalizedRole) userUpdate.role = normalizedRole;
-        if (userUpdate.fullName) userUpdate.fullName = userUpdate.fullName.trim();
-        else userUpdate.fullName = `${userUpdate.name_en} ${userUpdate.last_name_en}`;
+        
+        if (userUpdate.fullName) {
+            userUpdate.fullName = userUpdate.fullName.trim();
+        } else if (userUpdate.name_en && userUpdate.last_name_en) {
+            userUpdate.fullName = `${userUpdate.name_en} ${userUpdate.last_name_en}`.trim();
+        }
 
         await userRef.update(userUpdate);
 

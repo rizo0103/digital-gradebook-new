@@ -31,7 +31,6 @@ const getValidateLocale = (lang) => {
     return localeMap[lang?.toLowerCase()] || lang || 'ru-RU';
 };
 
-
 const normalizeAttendanceStatus = (status) => {
     const normalized = String(status || '').toLowerCase();
     if (['present', 'was', 'came', 'attended'].includes(normalized)) return 'present';
@@ -86,14 +85,13 @@ const AttendanceJournal = () => {
                 setLessons(sortedLessons);
                 setAttendance(nextAttendance);
 
-                // Определение текущего месяца в формате YYYY-MM
                 const today = new Date();
                 const nowMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 
                 if (monthList.includes(nowMonth)) {
-                    setSelectedMonth(nowMonth); // Выбираем текущий месяц, если в нём есть уроки
+                    setSelectedMonth(nowMonth);
                 } else if (monthList.length > 0) {
-                    setSelectedMonth(monthList[monthList.length - 1]); // Иначе последний доступный
+                    setSelectedMonth(monthList[monthList.length - 1]);
                 } else {
                     setSelectedMonth('');
                 }
@@ -113,12 +111,10 @@ const AttendanceJournal = () => {
         return months.sort();
     }, [lessons]);
 
-    // Варианты для CustomDropdown с локализацией названий месяцев
     const monthOptions = useMemo(() => {
         return availableMonths.map((month) => {
             const dateObj = new Date(`${month}-01T00:00:00`);
             const label = dateObj.toLocaleDateString(currentLang, { month: 'long', year: 'numeric' });
-            // Делаем первую букву заглавной
             const formattedLabel = label.charAt(0).toUpperCase() + label.slice(1);
             return {
                 value: month,
@@ -161,6 +157,22 @@ const AttendanceJournal = () => {
             setAttendance((current) => ({ ...current, [key]: currentStatus }));
             setError(err.response?.data?.message || t('journal.cantSave'));
         }
+    };
+
+    // --- 1. Подсчёт посещений для студента за отображаемые уроки ---
+    const getStudentAttendanceCount = (studentId) => {
+        return filteredLessons.reduce((count, lesson) => {
+            const status = statusFor(attendance, studentId, lesson);
+            return (status === 'present' || status === 'late') ? count + 1 : count;
+        }, 0);
+    };
+
+    // --- 2. Подсчёт количества присутствовавших студентов на конкретном уроке ---
+    const getLessonPresentCount = (lesson) => {
+        return students.reduce((count, student) => {
+            const status = statusFor(attendance, student.id, lesson);
+            return (status === 'present' || status === 'late') ? count + 1 : count;
+        }, 0);
     };
 
     if (loading) {
@@ -209,6 +221,23 @@ const AttendanceJournal = () => {
                         <span className="text-xs text-slate-400 whitespace-nowrap">{t('journal.lessons')}: {lessonCount}</span>
                     </div>
                 </div>
+
+                {/* --- 3. Обозначения (Легенда статусов) --- */}
+                <div className="mb-4 p-3 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-wrap items-center gap-4 text-xs justify-center">
+                    <div className="flex items-center gap-1.5">
+                        <span className="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px]">{t('journal.Б')}</span>
+                        <span className="text-slate-300">{t('journal.Был')}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <span className="w-6 h-6 rounded-md bg-slate-800 text-slate-300 flex items-center justify-center font-bold text-[11px]">{t('journal.Н')}</span>
+                        <span className="text-slate-300">{t('journal.Не был')}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <span className="w-6 h-6 rounded-md bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-[11px]">{t('journal.О')}</span>
+                        <span className="text-slate-300">{t('journal.Опоздал')}</span>
+                    </div>
+                </div>
+
                 {error && <div className="mb-4 p-3 rounded-xl border border-rose-800 bg-rose-950/40 text-rose-300 text-sm">{error}</div>}
 
                 {filteredLessons.length === 0 ? (
@@ -220,7 +249,7 @@ const AttendanceJournal = () => {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-900 border-b border-slate-800 text-xs text-slate-400">
-                                    <th className="p-3 sticky left-0 bg-slate-900">{t('journal.student')}</th>
+                                    <th className="p-3 sticky left-0 bg-slate-900 z-10">{t('journal.student')}</th>
                                     {filteredLessons.map((lesson) => (
                                         <th key={lesson.id || `${lesson.date}-${lesson.subject}`} className="p-3 text-center min-w-[82px]">
                                             <div className="font-medium text-slate-300">
@@ -231,12 +260,16 @@ const AttendanceJournal = () => {
                                             </div>
                                         </th>
                                     ))}
+                                    {/* --- 1. Столбец для подсчёта посещений студента --- */}
+                                    <th className="p-3 text-center min-w-[80px] bg-slate-900/90 text-blue-400 border-l border-slate-800 sticky right-0 z-10">
+                                        {t("journal.totalAttendance")}
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {students.map((student) => (
                                     <tr key={student.id} className="border-b border-slate-800/50 hover:bg-slate-900/30">
-                                        <td className="p-3 font-medium text-sm text-slate-200 whitespace-nowrap sticky left-0 bg-slate-950">
+                                        <td className="p-3 font-medium text-sm text-slate-200 whitespace-nowrap sticky left-0 bg-slate-950 z-10">
                                             {student.fullName || student.id}
                                         </td>
                                         {filteredLessons.map((lesson) => {
@@ -252,14 +285,34 @@ const AttendanceJournal = () => {
                                                         className={`w-9 h-9 rounded-lg text-xs font-bold ${statusColor} ${canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
                                                         title={`${statusLabel} · ${lesson.subject || t('journal.lesson')}`}
                                                     >
-                                                        {t(`journal.${attendanceShort[status]}`) || 'Н'}
+                                                        {t(`journal.${attendanceShort[status]}`) || attendanceShort[status] || 'Н'}
                                                     </button>
                                                 </td>
                                             );
                                         })}
+                                        {/* --- 1. Значение общего количества посещений студента --- */}
+                                        <td className="p-3 text-center font-bold text-sm text-blue-400 bg-slate-950 border-l border-slate-800/60 sticky right-0 z-10">
+                                            {getStudentAttendanceCount(student.id)} / {lessonCount}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
+                            {/* --- 2. Итоговая строка: количество присутствующих на каждом уроке --- */}
+                            <tfoot>
+                                <tr className="bg-slate-900/90 border-t-2 border-slate-800 text-xs font-semibold">
+                                    <td className="p-3 text-slate-300 sticky left-0 bg-slate-900 z-10 whitespace-nowrap">
+                                        {t("journal.attendedLesson")}
+                                    </td>
+                                    {filteredLessons.map((lesson) => (
+                                        <td key={`total-${lesson.id || lesson.date}-${lesson.subject || ''}`} className="p-3 text-center text-emerald-400">
+                                            {getLessonPresentCount(lesson)}
+                                        </td>
+                                    ))}
+                                    <td className="p-3 text-center bg-slate-900/90 border-l border-slate-800 sticky right-0 z-10 text-slate-500">
+                                        —
+                                    </td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 )}

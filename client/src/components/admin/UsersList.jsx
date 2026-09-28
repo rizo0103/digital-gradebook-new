@@ -1,8 +1,9 @@
 ﻿/* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api/axiosInstance';
-import { Search, Edit, Trash2, Check, X, Users, Shield, GraduationCap, School } from 'lucide-react';
+import { Search, Edit, Trash2, Check, X, Users, Shield, GraduationCap, School, Key, ChevronDown } from 'lucide-react';
+import GroupSelectDropdown from '../ui/GroupSelectDropdown';
 
 const fieldClass = "w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 transition-colors";
 
@@ -73,6 +74,7 @@ const UsersList = ({ groups = [] }) => {
         setEditingId(user.id);
         setEditForm({
             ...user,
+            password: '',
             role: user.role || 'student',
             student_groups: Array.isArray(user.student_groups) ? user.student_groups : [],
             teacher_groups: Array.isArray(user.teacher_groups) ? user.teacher_groups : [],
@@ -104,6 +106,10 @@ const UsersList = ({ groups = [] }) => {
                 student_groups: nextRole === 'student' ? normalizedGroupIds : [],
                 teacher_groups: nextRole === 'teacher' ? normalizedGroupIds : []
             };
+
+            if (!payload.password) {
+                delete payload.password;
+            }
 
             delete payload.passwordHash;
             delete payload.customId;
@@ -269,31 +275,43 @@ const UsersList = ({ groups = [] }) => {
 
                                         <td className="p-3">
                                             {isEditing ? (
-                                                <input
-                                                    value={editForm.username || editForm.email || ''}
-                                                    onChange={(e) => setEditForm({ ...editForm, username: e.target.value, email: e.target.value })}
-                                                    className={fieldClass}
-                                                />
+                                                <div className="flex flex-col gap-1.5">
+                                                    <input
+                                                        value={editForm.username || editForm.email || ''}
+                                                        onChange={(e) => setEditForm({ ...editForm, username: e.target.value, email: e.target.value })}
+                                                        className={fieldClass}
+                                                        placeholder="Email / Логин"
+                                                    />
+                                                    <div className="relative">
+                                                        <Key className="w-3 h-3 text-slate-500 absolute left-2.5 top-2.5" />
+                                                        <input
+                                                            type="password"
+                                                            placeholder="Новый пароль"
+                                                            value={editForm.password || ''}
+                                                            onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                                                            className={`${fieldClass} pl-7`}
+                                                        />
+                                                    </div>
+                                                </div>
                                             ) : (
                                                 <span className="text-slate-400">{u.username || u.email || t('admin.usersList.emptyGroup')}</span>
                                             )}
                                         </td>
 
+                                        {/* ОБНОВЛЕННАЯ ЯЧЕЙКА ВЫБОРА ГРУПП */}
                                         <td className="p-3">
                                             {isEditing ? (
-                                                <select
-                                                    multiple
-                                                    value={editForm.groupIds || getSelectedGroupIds(u)}
-                                                    onChange={(e) => {
-                                                        const selected = Array.from(e.target.selectedOptions, (option) => option.value);
-                                                        setEditForm({ ...editForm, groupIds: selected, student_groups: selected, teacher_groups: selected });
-                                                    }}
-                                                    className={`${fieldClass} min-h-[88px]`}
-                                                >
-                                                    {groups.map((g) => (
-                                                        <option key={g.id || g.name} value={g.id || g.name}>{g.name}</option>
-                                                    ))}
-                                                </select>
+                                                <GroupSelectDropdown
+                                                    groups={groups}
+                                                    selectedGroupIds={editForm.groupIds || getSelectedGroupIds(u)}
+                                                    onChange={(selected) => setEditForm({
+                                                        ...editForm,
+                                                        groupIds: selected,
+                                                        student_groups: selected,
+                                                        teacher_groups: selected
+                                                    })}
+                                                    t={t}
+                                                />
                                             ) : (
                                                 <div className="flex flex-wrap gap-1">
                                                     {(() => {
