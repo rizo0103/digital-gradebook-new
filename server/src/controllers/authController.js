@@ -7,24 +7,9 @@ exports.login = async (req, res) => {
   console.log('[LOGIN] Запрос на вход получен. Body:', req.body);
 
   try {
+    
     const { loginInput, password } = req.body || {}; // Предотвращаем падение, если req.body undefined
     
-    // --- ПОЛУЧЕНИЕ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ ИЗ FIRESTORE ---
-    console.log('[LOGIN] Получаем список всех пользователей из Firestore...');
-    const allUsersSnapshot = await db.collection('users').get();
-    
-    const allUsers = allUsersSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        fullName: data.fullName,
-        username: data.username,
-        email: data.email,
-        role: data.role,
-        createdAt: data.createdAt
-      };
-    });
-    console.log(allUsers);
     if (!loginInput || !password) {
       console.warn('[LOGIN] Ошибка: Не заполнены поля loginInput или password');
       return res.status(400).json({ message: 'Заполните все поля' });
@@ -48,16 +33,13 @@ exports.login = async (req, res) => {
 
     // Если совпадений нет
     if (userSnapshot.empty) {
-      console.warn(`[LOGIN] Пользователь с логином "${loginInput}" не найден в базе.`);
       return res.status(400).json({ message: 'Неверный логин (email/username) или пароль' });
     }
 
     const userDoc = userSnapshot.docs[0];
     const userData = userDoc.data();
-    console.log(`[LOGIN] Пользователь найден. ID: ${userDoc.id}, Role: ${userData.role}`);
 
     // Сверяем пароль
-    console.log('[LOGIN] Проверка пароля...');
     const targetHash = userData.passwordHash || userData.password;
     if (!targetHash) {
       console.error('[LOGIN] Ошибка: У пользователя отсутствует хэш пароля в базе данные!');

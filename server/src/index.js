@@ -17,7 +17,8 @@ if (!process.env.JWT_SECRET) {
 // Получаем разрешенные домены и удаляем лишние слэши на конце
 const allowedOrigins = [
         'https://digital-gradebook.vercel.app',
-        resources.urls?.frontend?.replace(/\/$/, '')
+        resources.urls?.frontend?.replace(/\/$/, ''),
+        "*"
       ];
 
 app.use(cors({
