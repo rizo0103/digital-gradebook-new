@@ -39,3 +39,8 @@ For local development, keep `serviceAccountKey.json` at the server root. It is i
 - `GET /api/attendance/:groupId`
 - `POST /api/attendance`
 - Admin endpoints under `/api/admin` for users, groups, students, and schedule generation.
+
+## Database query documentation
+
+Полный перечень операций Firestore, структуры коллекций и примеры запросов
+описаны в [docs/database-queries.md](docs/database-queries.md).
