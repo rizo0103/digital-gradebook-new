@@ -67,12 +67,23 @@ exports.saveAttendance = async (req, res) => {
         }
 
         if (role === 'teacher') {
-            const groupDoc = await db.collection('groups').doc(groupId).get();
-            const teacherIds = groupDoc.exists && Array.isArray(groupDoc.data().teacherIds)
-                ? groupDoc.data().teacherIds
+            const groupDoc = await db.collection('groups').doc(groupId).get(),
+                groupData = groupDoc.data();
+            
+            const teacherIds = groupDoc.exists && Array.isArray(groupData.teacherIds)
+                ? groupData.teacherIds
                 : [];
+            
+            const studentIds = groupDoc.exists && Array.isArray(groupData.studentIds)
+                ? groupData.studentIds.map(String)
+                : [];
+
             if (!groupDoc.exists || !teacherIds.includes(String(userId))) {
                 return res.status(403).json({ message: 'У вас нет прав на редактирование этой группы' });
+            }
+
+            if (!studentIds.includes(studentId)) {
+                return res.status(400).json({ message: 'Студент не принадлежит этой группе' });
             }
         }
 
