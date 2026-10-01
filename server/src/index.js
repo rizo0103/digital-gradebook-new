@@ -18,7 +18,8 @@ if (!process.env.JWT_SECRET) {
 const allowedOrigins = [
         'https://digital-gradebook.vercel.app',
         resources.urls?.frontend?.replace(/\/$/, ''),
-        "*"
+        '*',
+        'http://localhost:5173'
       ];
 
 app.use(cors({
