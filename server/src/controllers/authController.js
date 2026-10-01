@@ -4,19 +4,16 @@ const jwt = require('jsonwebtoken');
 
 // Вход в систему
 exports.login = async (req, res) => {
-  console.log('[LOGIN] Запрос на вход получен. Body:', req.body);
 
   try {
     
     const { loginInput, password } = req.body || {}; // Предотвращаем падение, если req.body undefined
     
     if (!loginInput || !password) {
-      console.warn('[LOGIN] Ошибка: Не заполнены поля loginInput или password');
       return res.status(400).json({ message: 'Заполните все поля' });
     }
 
     // 1. Проверяем по email
-    console.log(`[LOGIN] Ищем пользователя по email: "${loginInput}"...`);
     let userSnapshot = await db.collection('users')
       .where('email', '==', loginInput)
       .limit(1)
@@ -24,7 +21,6 @@ exports.login = async (req, res) => {
 
     // 2. Если по email не нашли, ищем по username
     if (userSnapshot.empty) {
-      console.log(`[LOGIN] По email не найден. Ищем по username: "${loginInput}"...`);
       userSnapshot = await db.collection('users')
         .where('username', '==', loginInput)
         .limit(1)
@@ -42,29 +38,23 @@ exports.login = async (req, res) => {
     // Сверяем пароль
     const targetHash = userData.passwordHash || userData.password;
     if (!targetHash) {
-      console.error('[LOGIN] Ошибка: У пользователя отсутствует хэш пароля в базе данные!');
+      return res.status(500).json({ message: 'Ошибка сервера при входе, хэш пароля отсутствует' });
     }
 
     const isMatch = await bcrypt.compare(password, targetHash || '');
     if (!isMatch) {
-      console.warn('[LOGIN] Пароль не совпадает');
       return res.status(400).json({ message: 'Неверный логин (email/username) или пароль' });
     }
 
-    console.log('[LOGIN] Пароль верный. Проверка JWT_SECRET...');
     if (!process.env.JWT_SECRET) {
-      console.error('[LOGIN] КРИТИЧЕСКАЯ ОШИБКА: process.env.JWT_SECRET не задан!');
+      return res.status(500).json({ message: 'Ошибка сервера при входе, JWT_SECRET не задан' });
     }
 
     // Генерация JWT
     const token = jwt.sign(
       { id: userDoc.id, role: userData.role },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
     );
-
-    console.log('[LOGIN] Успешный вход пользователя:', userDoc.id);
-
 
     res.json({
       token,
@@ -87,32 +77,25 @@ exports.login = async (req, res) => {
 };
 // Создание пользователя (только Admin)
 exports.registerUser = async (req, res) => {
-  console.log('[REGISTER] Запрос на регистрацию получен. Body:', req.body);
 
   try {
     const { email, password, fullName, role, username } = req.body || {};
 
     if (!email || !password || !fullName || !['admin', 'teacher', 'student'].includes(role)) {
-      console.warn('[REGISTER] Ошибка валидации: переданы неверные данные или не поддерживаемая роль:', { email, fullName, role });
       return res.status(400).json({ message: 'Некорректная роль пользователя или заполнены не все обязательные поля' });
     }
 
     if (password.length < 8) {
-      console.warn('[REGISTER] Пароль слишком короткий');
       return res.status(400).json({ message: 'Пароль должен содержать минимум 8 символов' });
     }
 
-    console.log(`[REGISTER] Проверка наличия пользователя с email: ${email}...`);
     const existingUser = await db.collection('users').where('email', '==', email).get();
     if (!existingUser.empty) {
-      console.warn(`[REGISTER] Пользователь с email ${email} уже существует.`);
       return res.status(400).json({ message: 'Пользователь с таким email уже существует' });
     }
 
-    console.log('[REGISTER] Хэширование пароля...');
     const passwordHash = await bcrypt.hash(password, 10);
 
-    console.log('[REGISTER] Сохранение пользователя в Firestore...');
     const newUserRef = await db.collection('users').add({
       email,
       username: username || email.split('@')[0],
@@ -122,10 +105,8 @@ exports.registerUser = async (req, res) => {
       createdAt: new Date().toISOString()
     });
 
-    console.log(`[REGISTER] Пользователь успешно создан с ID: ${newUserRef.id}`);
     res.status(201).json({ id: newUserRef.id, message: 'Пользователь успешно создан' });
   } catch (error) {
-    console.error('[REGISTER ERROR] Ошибка при регистрации:', error);
     res.status(500).json({ message: 'Ошибка при регистрации' });
   }
 };
