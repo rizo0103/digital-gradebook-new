@@ -1,4 +1,5 @@
 const { db } = require('../config/firebase');
+const { normalizeArray } = require('./userUtils');
 
 
 // Синхронизация групп и участников
