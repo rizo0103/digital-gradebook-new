@@ -219,9 +219,6 @@ const ScheduleManager = ({ groups, refreshKey = 0 }) => {
                 ) : (
                     <div className="space-y-2 max-h-[500px] overflow-y-auto">
                         {lessons.map((lesson) => {
-                            const canDelete =
-                                lesson.date > todayString;
-
                             return (
                                 <div
                                     key={lesson.id}
@@ -238,7 +235,7 @@ const ScheduleManager = ({ groups, refreshKey = 0 }) => {
 
                                     <button
                                         type="button"
-                                        disabled={!canDelete || deleting}
+                                        disabled={deleting}
                                         onClick={() => handleDeleteOne(lesson)}
                                         className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg disabled:opacity-30"
                                         title="Удалить занятие"
