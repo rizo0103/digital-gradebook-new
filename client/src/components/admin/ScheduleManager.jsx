@@ -131,19 +131,6 @@ const ScheduleManager = ({ groups, refreshKey = 0 }) => {
         }
     };
 
-    const today = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'Asia/Dushanbe',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).formatToParts(new Date());
-
-    const datePart = (type) =>
-        today.find((part) => part.type === type)?.value;
-
-    const todayString =
-        `${datePart('year')}-${datePart('month')}-${datePart('day')}`;
-
     return (
         <div className="space-y-6">
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
@@ -180,12 +167,11 @@ const ScheduleManager = ({ groups, refreshKey = 0 }) => {
                     type="button"
                     disabled={deleting || !groupId ||
                         !startDate || !endDate ||
-                        startDate <= todayString ||
                         startDate > endDate}
                     onClick={handleDeleteBulk}
                     className="w-full bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-xl py-3 font-semibold"
                 >
-                    Удалить будущие занятия за период
+                    Удалить занятия за период
                 </button>
             </div>
 

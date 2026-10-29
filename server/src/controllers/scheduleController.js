@@ -86,22 +86,6 @@ exports.generateSchedule = async (req, res, next) => {
         next(error);
     }
 };
-const CENTER_TIME_ZONE = 'Asia/Dushanbe';
-
-const getTodayInCenter = () => {
-    const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone: CENTER_TIME_ZONE,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).formatToParts(new Date());
-
-    const get = (type) =>
-        parts.find((part) => part.type === type)?.value;
-
-    return `${get('year')}-${get('month')}-${get('day')}`;
-};
-
 const isValidDate = (value) => {
     if (typeof value !== 'string' ||
         !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -189,7 +173,7 @@ exports.deleteSchedule = async (req, res, next) => {
     }
 };
 
-// Массовое удаление будущих занятий
+// Массовое удаление занятий за период
 exports.deleteSchedulesBulk = async (req, res, next) => {
     try {
         const { groupId, startDate, endDate } = req.body;
@@ -200,14 +184,6 @@ exports.deleteSchedulesBulk = async (req, res, next) => {
             startDate > endDate) {
             return res.status(400).json({
                 message: 'Укажите группу и корректный период'
-            });
-        }
-
-        const today = getTodayInCenter();
-
-        if (startDate <= today) {
-            return res.status(400).json({
-                message: 'Начало периода должно быть позже сегодняшней даты'
             });
         }
 
@@ -230,8 +206,7 @@ exports.deleteSchedulesBulk = async (req, res, next) => {
 
             return isValidDate(date) &&
                 date >= startDate &&
-                date <= endDate &&
-                date > today;
+                date <= endDate;
         });
 
         // Получаем посещаемость группы за выбранный период.
