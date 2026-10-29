@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import api from '../../api/axiosInstance';
 import CustomDropdown from '../ui/CustomDropdown';
 import { Calendar } from 'lucide-react';
+import { useEffect } from 'react';
+import ScheduleManager from './ScheduleManager';
 
 const fieldInputClass = "w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:bg-slate-900/50 transition-colors";
 
@@ -19,6 +21,11 @@ const daysOptions = [
 
 const ScheduleTab = ({ groups, teachers }) => {
     const { t } = useTranslation();
+
+    const [schedules, setSchedules] = useState([]);
+    const [loadingSchedules, setLoadingSchedules] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
+
     const [scheduleForm, setScheduleForm] = useState({
         groupId: '',
         subject: '',
@@ -50,10 +57,63 @@ const ScheduleTab = ({ groups, teachers }) => {
                 groupId: '', subject: '', startDate: '', endDate: '',
                 daysOfWeek: [], time: '14:00', teacherId: ''
             });
+            setRefreshKey((prev) => prev + 1);
         } catch (err) {
             alert(t('admin.scheduleTab.error'));
         }
     };
+
+    const handleDeleteSchedule = async (scheduleId) => {
+        const confirmed = window.confirm(
+            'Вы действительно хотите удалить это расписание?'
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await api.delete(`/admin/schedules/${scheduleId}`);
+
+            setSchedules((prev) =>
+                prev.filter((schedule) => schedule.id !== scheduleId)
+            );
+
+        } catch (error) {
+            console.error('Ошибка удаления расписания:', error);
+
+            alert(
+                error.response?.data?.message ||
+                'Не удалось удалить расписание'
+            );
+        }
+    };
+
+    useEffect(() => {
+        let ignore = false;
+
+        const loadSchedules = async () => {
+            setLoadingSchedules(true);
+
+            try {
+                const response = await api.get('/admin/schedules');
+
+                if (!ignore) {
+                    setSchedules(response.data);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки расписаний:', error);
+            } finally {
+                if (!ignore) {
+                    setLoadingSchedules(false);
+                }
+            }
+        };
+
+        loadSchedules();
+
+        return () => {
+            ignore = true;
+        };
+    }, []);
 
     return (
         <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 sm:p-8 max-w-xl">
@@ -105,11 +165,10 @@ const ScheduleTab = ({ groups, teachers }) => {
                                     key={day.id}
                                     type="button"
                                     onClick={() => toggleDay(day.value)}
-                                    className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
-                                        isSelected
-                                            ? 'bg-blue-600 border-blue-500 text-white'
-                                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                                    }`}
+                                    className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${isSelected
+                                        ? 'bg-blue-600 border-blue-500 text-white'
+                                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                                        }`}
                                 >
                                     {day.label}
                                 </button>
@@ -156,6 +215,10 @@ const ScheduleTab = ({ groups, teachers }) => {
                     {t('admin.scheduleTab.generate')}
                 </button>
             </form>
+            <ScheduleManager 
+                groups={groups}
+                refreshKey={refreshKey}
+            />
         </div>
     );
 };

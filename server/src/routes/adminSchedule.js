@@ -7,10 +7,9 @@ const roleMiddleware = require('../middlewares/roleMiddleware');
 // Импорт необходимых middleware (аутентификация, проверка прав)
 router.use(authMiddleware, roleMiddleware(['admin']));
 
-// POST /api/admin/schedule
-router.post(
-    '/schedule',
-    scheduleController.generateSchedule
-);
+router.post('/schedule', scheduleController.generateSchedule);
+router.get('/schedules', scheduleController.getSchedules);
+router.delete('/schedules/bulk', scheduleController.deleteSchedulesBulk);
+router.delete('/schedules/:id', scheduleController.deleteSchedule);
 
 module.exports = router;
