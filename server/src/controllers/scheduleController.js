@@ -172,13 +172,6 @@ exports.deleteSchedule = async (req, res, next) => {
 
         const lesson = lessonDoc.data();
 
-        if (!isValidDate(lesson.date) ||
-            lesson.date <= getTodayInCenter()) {
-            return res.status(400).json({
-                message: 'Можно удалять только будущие занятия'
-            });
-        }
-
         if (await hasAttendanceForLesson(lesson)) {
             return res.status(409).json({
                 message: 'Для занятия уже есть посещаемость'
